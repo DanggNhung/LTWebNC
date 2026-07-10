@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin cá nhân</title>
+</head>
+<body>
+<div class="container">
+    <h2>
+        Thông tin cá nhân
+    </h2>
+    <% if (profile) { %>
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>
+                Username
+            </th>
+            <td>
+                <%= profile.username %>
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Vai trò
+            </th>
+            <td>
+                <%= profile.role %>
+            </td>
+        </tr>
+        <% if (profile.fullname) { %>
+        <tr>
+            <th>
+                Họ và tên
+            </th>
+            <td>
+                <%= profile.fullname %>
+            </td>
+        </tr>
+        <% } %>
+        <% if (profile.email) { %>
+        <tr>
+            <th>
+                Email
+            </th>
+            <td>
+                <%= profile.email %>
+            </td>
+        </tr>
+        <% } %>
+        <% if (profile.phone) { %>
+        <tr>
+            <th>
+                Số điện thoại
+            </th>
+            <td>
+                <%= profile.phone %>
+            </td>
+        </tr>
+        <% } %>
+        <% if (profile.address) { %>
+        <tr>
+            <th>
+                Địa chỉ
+            </th>
+            <td>
+                <%= profile.address %>
+            </td>
+        </tr>
+        <% } %>
+    </table>
+    <br>
+    <a href="/profile/edit">
+        Chỉnh sửa thông tin
+    </a>
+    <br><br>
+    <a href="/">
+        Quay lại trang chủ
+    </a>
+    <% } else { %>
+        <h3>
+            Không tìm thấy thông tin cá nhân
+        </h3>
+    <% } %>
+</div>
+</body>
+</html>
