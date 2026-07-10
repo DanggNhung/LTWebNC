@@ -1,14 +1,9 @@
 require("dotenv").config();
-
 const express = require("express");
 const path = require("path");
 const session = require("express-session");
-
 const app = express();
 
-// ========================
-// Import Routes
-// ========================
 const authRoutes = require("./routes/authRoutes");
 const accountRoutes = require("./routes/accountRoutes");
 const studentRoutes = require("./routes/studentRoutes");
@@ -17,9 +12,6 @@ const subjectRoutes = require("./routes/subjectRoutes");
 const gradeRoutes = require("./routes/gradeRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 
-// ========================
-// Middleware
-// ========================
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -27,10 +19,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-
-// ========================
-// Session
-// ========================
 app.use(
     session({
         secret: process.env.SESSION_SECRET || "student-management-secret",
@@ -39,9 +27,6 @@ app.use(
     })
 );
 
-// ========================
-// Routes
-// ========================
 app.use("/", authRoutes);
 
 app.use("/accounts", accountRoutes);
@@ -55,10 +40,6 @@ app.use("/subjects", subjectRoutes);
 app.use("/grades", gradeRoutes);
 
 app.use("/profile", profileRoutes);
-
-// ========================
-// Dashboard
-// ========================
 app.get("/", (req, res) => {
 
     if (!req.session.user) {
@@ -81,10 +62,6 @@ app.get("/", (req, res) => {
     }
 
 });
-
-// ========================
-// Admin Dashboard
-// ========================
 app.get("/admin", (req, res) => {
 
     if (!req.session.user || req.session.user.role !== "admin") {
@@ -96,10 +73,6 @@ app.get("/admin", (req, res) => {
     });
 
 });
-
-// ========================
-// Teacher Dashboard
-// ========================
 app.get("/teacher", (req, res) => {
 
     if (!req.session.user || req.session.user.role !== "teacher") {
@@ -111,10 +84,6 @@ app.get("/teacher", (req, res) => {
     });
 
 });
-
-// ========================
-// Student Dashboard
-// ========================
 app.get("/student", (req, res) => {
 
     if (!req.session.user || req.session.user.role !== "student") {
@@ -126,17 +95,9 @@ app.get("/student", (req, res) => {
     });
 
 });
-
-// ========================
-// 404
-// ========================
 app.use((req, res) => {
     res.status(404).render("errors/404");
 });
-
-// ========================
-// Start Server
-// ========================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
