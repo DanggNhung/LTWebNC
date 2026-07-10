@@ -1,0 +1,242 @@
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  background: var(--primary);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: var(--sidebar-width);
+  z-index: 10;
+}
+
+.sidebar-brand {
+  padding: 52px 24px 42px;
+}
+
+.sidebar-brand h1 {
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.sidebar-brand p,
+.sidebar-profile span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 8px;
+  padding: 0 24px;
+}
+
+.sidebar-nav a {
+  align-items: center;
+  border-radius: var(--radius);
+  color: rgba(255, 255, 255, 0.72);
+  display: flex;
+  font-size: 18px;
+  font-weight: 600;
+  gap: 16px;
+  padding: 14px 16px;
+}
+
+.sidebar-nav a.active {
+  background: var(--primary-soft);
+  color: white;
+  position: relative;
+}
+
+.sidebar-nav a.active::before {
+  background: white;
+  border-radius: 0 5px 5px 0;
+  content: "";
+  height: 30px;
+  left: -24px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+}
+
+.sidebar-profile {
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  gap: 14px;
+  margin-top: auto;
+  padding: 28px 24px;
+}
+
+.sidebar-profile div:last-child {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-main {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  width: calc(100% - var(--sidebar-width));
+}
+
+.admin-topbar,
+.student-header,
+.faculty-header,
+.management-topbar {
+  align-items: center;
+  background: var(--surface-high);
+  border-bottom: 1px solid var(--outline);
+  display: flex;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.admin-content,
+.student-content,
+.faculty-content,
+.management-content {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 28px;
+}
+
+.breadcrumb,
+.topbar-actions,
+.student-header nav,
+.faculty-user,
+.faculty-title,
+.management-topbar nav {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+}
+
+.management-topbar > strong {
+  color: var(--primary);
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.management-topbar nav button {
+  align-items: center;
+  background: transparent;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 38px;
+  min-width: 38px;
+}
+
+.breadcrumb strong,
+.faculty-title span {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.faculty-title strong,
+.student-header strong {
+  color: var(--primary);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.faculty-title span {
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 4px;
+}
+
+.page-heading {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 20px;
+}
+
+.page-heading h1 {
+  color: var(--primary);
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+.page-heading span {
+  color: var(--muted);
+  display: block;
+  margin-top: 6px;
+}
+
+.student-grid,
+.faculty-grid {
+  align-items: start;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.semester-stack,
+.faculty-insights {
+  display: grid;
+  gap: 20px;
+}
+
+@media (max-width: 1100px) {
+  .admin-sidebar {
+    position: static;
+    width: 230px;
+  }
+
+  .admin-main {
+    margin-left: 0;
+    width: auto;
+  }
+
+  .student-grid,
+  .faculty-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-sidebar {
+    height: auto;
+    width: 100%;
+  }
+
+  .sidebar-brand {
+    padding: 24px;
+  }
+
+  .sidebar-profile {
+    display: none;
+  }
+
+  .admin-topbar,
+  .student-header,
+  .faculty-header,
+  .management-topbar,
+  .page-heading {
+    align-items: stretch;
+    flex-direction: column;
+    height: auto;
+    padding: 18px;
+  }
+
+  .admin-content,
+  .student-content,
+  .faculty-content {
+    padding: 18px;
+  }
+}
