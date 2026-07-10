@@ -13,7 +13,7 @@ export default function StudentResults() {
           <div>
             <p className="label-caps">Hồ sơ sinh viên</p>
             <h1>Kết quả học tập</h1>
-            <span>{studentProfile.name} - {studentProfile.program}</span>
+            <span>Theo dõi điểm học kỳ, tín chỉ tích lũy và tiến độ học tập của {studentProfile.name}.</span>
           </div>
           <div className="button-row">
             <Button variant="secondary" icon="download">Tải xuống</Button>

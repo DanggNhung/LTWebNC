@@ -1,29 +1,38 @@
-import Button from "../common/Button.jsx";
 import Icon from "../common/Icon.jsx";
 import StatusBadge from "../common/StatusBadge.jsx";
+
+function getGivenNameInitial(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  return parts.at(-1)?.charAt(0).toUpperCase() ?? "";
+}
 
 export default function RegistrationTable({ rows }) {
   return (
     <section className="panel registration-panel">
       <div className="panel-header">
         <div>
-          <h2>Đăng ký sinh viên gần đây</h2>
-          <p>Theo dõi luồng ghi danh theo thời gian thực</p>
+          <h2>Danh sách sinh viên</h2>
+          <p>Tổng số sinh viên: 12.842</p>
         </div>
         <div className="panel-actions">
-          <Button variant="secondary" icon="filter_list">Lọc</Button>
-          <Button icon="person_add">Thêm mới</Button>
+          <div className="filter-controls" aria-label="Bộ lọc sinh viên">
+            <Icon name="filter_list" />
+            <button type="button">Chọn Khoa</button>
+            <button type="button">Chọn Ngành</button>
+            <button type="button">Chọn Lớp</button>
+          </div>
         </div>
       </div>
       <div className="table-wrap">
-        <table className="data-table">
+        <table className="data-table student-table">
           <thead>
             <tr>
-              <th>Họ tên</th>
+              <th>Họ và tên</th>
               <th>Mã sinh viên</th>
+              <th>Khoa</th>
+              <th>Ngành</th>
               <th>Lớp</th>
               <th>Trạng thái</th>
-              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -31,7 +40,7 @@ export default function RegistrationTable({ rows }) {
               <tr key={row.studentId}>
                 <td>
                   <div className="identity-cell">
-                    <span className={`avatar ${row.avatar}`}>{row.initials}</span>
+                    <span className={`avatar ${row.avatar}`}>{getGivenNameInitial(row.name)}</span>
                     <span>
                       <strong>{row.name}</strong>
                       <small>{row.email}</small>
@@ -39,16 +48,16 @@ export default function RegistrationTable({ rows }) {
                   </div>
                 </td>
                 <td className="mono">{row.studentId}</td>
+                <td>{row.faculty}</td>
+                <td>{row.major}</td>
                 <td>{row.className}</td>
                 <td><StatusBadge status={row.status} /></td>
-                <td><button className="icon-button"><Icon name="more_vert" /></button></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <footer className="pagination">
-        <span>Đang hiển thị 5 trong 1,280 lượt đăng ký</span>
+      <footer className="pagination pagination-centered">
         <div>
           <button><Icon name="chevron_left" /></button>
           <button className="active">1</button>

@@ -17,17 +17,12 @@
 }
 
 .sidebar-brand {
-  padding: 52px 24px 42px;
+  padding: 52px 24px 48px;
 }
 
 .sidebar-brand h1 {
-  font-size: 34px;
+  font-size: 32px;
   line-height: 1.1;
-}
-
-.sidebar-brand p,
-.sidebar-profile span {
-  color: rgba(255, 255, 255, 0.7);
 }
 
 .sidebar-nav {
@@ -68,15 +63,13 @@
 .sidebar-profile {
   align-items: center;
   border-top: 1px solid rgba(255, 255, 255, 0.16);
+  color: white;
   display: flex;
+  font-size: 18px;
+  font-weight: 800;
   gap: 14px;
   margin-top: auto;
   padding: 28px 24px;
-}
-
-.sidebar-profile div:last-child {
-  display: grid;
-  gap: 4px;
 }
 
 .admin-main {
@@ -87,13 +80,12 @@
 
 .admin-topbar,
 .student-header,
-.faculty-header,
-.management-topbar {
+.faculty-header {
   align-items: center;
   background: var(--surface-high);
   border-bottom: 1px solid var(--outline);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-height: 72px;
   padding: 0 28px;
   position: sticky;
@@ -110,33 +102,22 @@
   padding: 28px;
 }
 
-.breadcrumb,
-.topbar-actions,
+.admin-breadcrumb,
 .student-header nav,
 .faculty-user,
-.faculty-title,
-.management-topbar nav {
+.faculty-title {
   align-items: center;
   display: flex;
   gap: 14px;
 }
 
-.management-topbar > strong {
+.admin-breadcrumb {
   color: var(--primary);
-  font-size: 34px;
+  font-size: 28px;
   font-weight: 900;
 }
 
-.management-topbar nav button {
-  align-items: center;
-  background: transparent;
-  display: inline-flex;
-  justify-content: center;
-  min-height: 38px;
-  min-width: 38px;
-}
-
-.breadcrumb strong,
+.admin-breadcrumb span:last-child,
 .faculty-title span {
   color: var(--primary);
   font-weight: 800;
@@ -226,7 +207,6 @@
   .admin-topbar,
   .student-header,
   .faculty-header,
-  .management-topbar,
   .page-heading {
     align-items: stretch;
     flex-direction: column;
@@ -236,7 +216,8 @@
 
   .admin-content,
   .student-content,
-  .faculty-content {
+  .faculty-content,
+  .management-content {
     padding: 18px;
   }
 }

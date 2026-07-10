@@ -13,7 +13,7 @@ export default function FacultyDashboard() {
           <div>
             <p className="label-caps">Không gian giảng viên</p>
             <h1>Bảng điều khiển giảng viên</h1>
-            <span>Quản lý điểm, xuất dữ liệu và theo dõi tín hiệu học tập của lớp.</span>
+            <span>Nhập, cập nhật và rà soát điểm sinh viên theo từng lớp học.</span>
           </div>
         </section>
         <GradeToolbar />

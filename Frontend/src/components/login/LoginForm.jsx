@@ -8,20 +8,26 @@ export default function LoginForm() {
   return (
     <section className="login-card">
       <div className="role-tabs">
-        <button className={role === "student" ? "active" : ""} onClick={() => setRole("student")}>Sinh viên</button>
-        <button className={role === "faculty" ? "active" : ""} onClick={() => setRole("faculty")}>Giảng viên</button>
+        <button className={role === "student" ? "active" : ""} onClick={() => setRole("student")}>
+          Sinh viên
+        </button>
+        <button className={role === "faculty" ? "active" : ""} onClick={() => setRole("faculty")}>
+          Giảng viên
+        </button>
       </div>
       <form>
         <label className="field-control">
           <span>Mã đăng nhập</span>
           <Icon name="person" />
-          <input placeholder={role === "student" ? "ma.sinhvien@edutrack" : "ma.giangvien@edutrack"} />
+          <input placeholder={role === "student" ? "Nhập mã sinh viên" : "Nhập mã giảng viên"} />
         </label>
         <label className="field-control">
           <span>Mật khẩu</span>
           <Icon name="lock" />
           <input type="password" placeholder="Nhập mật khẩu" />
-          <button type="button"><Icon name="visibility" /></button>
+          <button type="button" aria-label="Hiện mật khẩu">
+            <Icon name="visibility" />
+          </button>
         </label>
         <div className="login-options">
           <label><input type="checkbox" /> Ghi nhớ đăng nhập</label>
@@ -31,10 +37,6 @@ export default function LoginForm() {
           Đăng nhập
         </Button>
       </form>
-      <a className="admin-link" href="#admin">
-        <Icon name="admin_panel_settings" />
-        <span>Chuyển đến mẫu quản trị</span>
-      </a>
     </section>
   );
 }
