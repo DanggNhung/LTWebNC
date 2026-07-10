@@ -1,0 +1,819 @@
+.admin-bottom-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  margin-top: 28px;
+}
+
+.admin-ai-card {
+  border-top: 4px solid var(--accent);
+}
+
+.health-card {
+  background: #e1e3e4;
+  padding: 28px;
+}
+
+.health-card h3 {
+  font-size: 24px;
+}
+
+.health-card p {
+  color: #50505a;
+  line-height: 1.5;
+}
+
+.health-card footer {
+  align-items: center;
+  border-top: 1px solid var(--outline);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 54px;
+  padding-top: 28px;
+}
+
+.student-page,
+.faculty-page {
+  min-height: 100vh;
+}
+
+.student-header > div:first-child {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.student-header > div:first-child span {
+  border-left: 1px solid var(--outline);
+  color: var(--primary);
+  font-weight: 800;
+  padding-left: 16px;
+}
+
+.semester-card {
+  overflow: hidden;
+}
+
+.semester-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 22px 28px;
+}
+
+.semester-header h2,
+.progress-card h3,
+.quick-links h3 {
+  color: var(--primary);
+  font-size: 20px;
+}
+
+.student-summary {
+  display: grid;
+  gap: 20px;
+}
+
+.gpa-card {
+  background: var(--primary);
+  border-radius: var(--radius-lg);
+  color: white;
+  min-height: 210px;
+  overflow: hidden;
+  padding: 28px;
+  position: relative;
+}
+
+.gpa-card .material-symbols-outlined {
+  color: var(--accent);
+  font-size: 42px;
+}
+
+.gpa-card p {
+  color: rgba(255, 255, 255, 0.74);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 18px;
+  text-transform: uppercase;
+}
+
+.gpa-card strong {
+  display: block;
+  font-size: 56px;
+  margin: 4px 0;
+}
+
+.gpa-card span {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.progress-card,
+.quick-links {
+  padding: 24px;
+}
+
+.ring-progress {
+  align-items: center;
+  background:
+    radial-gradient(circle closest-side, white 72%, transparent 73%),
+    conic-gradient(var(--accent) var(--value), #e7e8e9 0);
+  border-radius: 50%;
+  display: flex;
+  height: 150px;
+  justify-content: center;
+  margin: 24px auto;
+  width: 150px;
+}
+
+.ring-progress strong {
+  color: var(--primary);
+  font-size: 28px;
+}
+
+.progress-card p {
+  color: var(--muted);
+  text-align: center;
+}
+
+.quick-links {
+  display: grid;
+  gap: 14px;
+}
+
+.quick-links a {
+  align-items: center;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  display: flex;
+  font-weight: 700;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+.small-ai-card {
+  background: white;
+  color: var(--muted);
+}
+
+.small-ai-card .material-symbols-outlined {
+  color: var(--secondary);
+  font-size: 34px;
+}
+
+.login-page {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(3, 0, 87, 0.08), rgba(45, 188, 254, 0.08)),
+    var(--surface-low);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.login-wrap {
+  max-width: 440px;
+  position: relative;
+  width: 100%;
+}
+
+.login-brand {
+  margin-bottom: 34px;
+  text-align: center;
+}
+
+.brand-mark {
+  align-items: center;
+  background: var(--primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  color: white;
+  display: inline-flex;
+  height: 64px;
+  justify-content: center;
+  margin-bottom: 16px;
+  width: 64px;
+}
+
+.brand-mark .material-symbols-outlined {
+  font-size: 40px;
+}
+
+.login-brand h1 {
+  color: var(--primary);
+  font-size: 30px;
+}
+
+.login-brand p {
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.login-card {
+  padding: 24px;
+}
+
+.role-tabs {
+  background: var(--surface-mid);
+  border-radius: var(--radius);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin-bottom: 24px;
+  padding: 4px;
+}
+
+.role-tabs button {
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 38px;
+  text-transform: uppercase;
+}
+
+.role-tabs button.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 6px 18px rgba(3, 0, 87, 0.1);
+}
+
+.field-control {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.field-control > span:first-child {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.field-control .material-symbols-outlined {
+  bottom: 12px;
+  color: var(--muted);
+  left: 12px;
+  position: absolute;
+}
+
+.field-control input {
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  min-height: 48px;
+  outline: 0;
+  padding: 0 44px;
+  width: 100%;
+}
+
+.field-control input:focus {
+  border-color: var(--primary);
+}
+
+.field-control button {
+  background: transparent;
+  bottom: 5px;
+  color: var(--muted);
+  min-height: 38px;
+  position: absolute;
+  right: 4px;
+  width: 38px;
+}
+
+.login-options {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 14px;
+  justify-content: space-between;
+  margin: 4px 0 22px;
+}
+
+.login-options label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.login-options a,
+.admin-link {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.admin-link {
+  align-items: center;
+  border-top: 1px solid var(--outline);
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 22px;
+  padding-top: 18px;
+}
+
+.login-art {
+  bottom: -90px;
+  color: rgba(3, 0, 87, 0.06);
+  display: flex;
+  justify-content: space-between;
+  left: -80px;
+  pointer-events: none;
+  position: absolute;
+  right: -80px;
+  z-index: -1;
+}
+
+.login-art .material-symbols-outlined {
+  font-size: 120px;
+}
+
+.grade-toolbar {
+  align-items: end;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 280px minmax(240px, 1fr) auto;
+  margin-bottom: 24px;
+  padding: 20px;
+}
+
+.grade-toolbar select,
+.grade-toolbar input,
+.grade-table input {
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  min-height: 42px;
+  outline: 0;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.grade-toolbar label span {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.grade-toolbar p {
+  margin-bottom: 8px;
+}
+
+.grade-panel {
+  overflow: hidden;
+}
+
+.grade-table input {
+  max-width: 84px;
+}
+
+.faculty-insights .ai-illustration {
+  align-items: center;
+  background: white;
+  border-radius: var(--radius-lg);
+  color: rgba(3, 0, 87, 0.14);
+  display: flex;
+  height: 220px;
+  justify-content: center;
+}
+
+.faculty-insights .ai-illustration .material-symbols-outlined {
+  font-size: 150px;
+}
+
+.faculty-insights .ai-card {
+  background: #f9fbff;
+  color: var(--muted);
+}
+
+.faculty-insights .ai-card h3 {
+  color: var(--primary);
+  display: block;
+  margin: 12px 0;
+}
+
+.faculty-insights .ai-card > .material-symbols-outlined {
+  color: var(--secondary);
+  font-size: 34px;
+}
+
+.faculty-insights .ai-card a {
+  align-items: center;
+  color: var(--primary);
+  display: inline-flex;
+  font-weight: 800;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.compliance-card {
+  padding: 24px;
+}
+
+.compliance-card h3 {
+  margin: 10px 0;
+}
+
+.compliance-card p {
+  color: var(--muted);
+}
+
+.compliance-card span {
+  align-items: center;
+  color: var(--success);
+  display: flex;
+  font-weight: 800;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+  .admin-bottom-grid,
+  .grade-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-options {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.management-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 20px;
+}
+
+.management-heading h1 {
+  color: var(--primary);
+  font-size: 38px;
+  line-height: 1.15;
+}
+
+.management-heading p,
+.management-heading span {
+  color: var(--muted);
+  display: block;
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+.management-heading.compact-heading p {
+  color: var(--text);
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.management-heading.compact-heading p strong {
+  color: var(--primary);
+}
+
+.account-metrics {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 28px;
+}
+
+.account-metric {
+  align-items: center;
+  background: var(--surface-high);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 18px;
+  min-height: 128px;
+  padding: 24px;
+}
+
+.account-metric.accent {
+  background: #dff0ff;
+  border-color: #8bd5ff;
+}
+
+.account-metric .material-symbols-outlined {
+  background: var(--surface-mid);
+  border-radius: var(--radius);
+  color: var(--primary);
+  font-size: 28px;
+  padding: 12px;
+}
+
+.account-metric p {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.account-metric strong {
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.accounts-table-panel,
+.class-directory,
+.subject-inventory {
+  overflow: hidden;
+}
+
+.role-chip {
+  border-radius: 999px;
+  display: inline-flex;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+}
+
+.role-quản-trị {
+  background: var(--primary);
+  color: white;
+}
+
+.role-giảng-viên {
+  background: #8bd5ff;
+  color: #00506f;
+}
+
+.role-sinh-viên {
+  background: #5c0a8a;
+  color: white;
+}
+
+.class-stat-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 48px;
+}
+
+.class-stat-grid .stat-card {
+  min-height: 170px;
+}
+
+.inline-heading {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.inline-heading span {
+  background: var(--surface-mid);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+  text-transform: uppercase;
+}
+
+.view-toggle {
+  align-items: center;
+  background: white;
+  border: 1px solid var(--outline);
+  display: inline-flex;
+  justify-content: center;
+  min-height: 42px;
+  min-width: 48px;
+}
+
+.view-toggle.active {
+  background: var(--surface-mid);
+}
+
+.department-chip {
+  background: #e2f4ff;
+  border-radius: var(--radius-sm);
+  color: #00658d;
+  display: inline-flex;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+.capacity-cell {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.capacity-cell > span {
+  background: #eeeaf4;
+  border-radius: 999px;
+  display: inline-block;
+  height: 8px;
+  min-width: 96px;
+  overflow: hidden;
+}
+
+.capacity-cell i {
+  background: var(--primary);
+  display: block;
+  height: 100%;
+}
+
+.class-insights {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  margin-top: 42px;
+}
+
+.scheduling-card {
+  min-height: 260px;
+}
+
+.scheduling-card h3 {
+  color: white;
+  display: block;
+  font-size: 32px;
+}
+
+.growth-card {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 260px;
+  padding: 28px;
+  text-align: center;
+}
+
+.growth-card > .material-symbols-outlined {
+  background: white;
+  border-radius: 50%;
+  color: var(--primary);
+  font-size: 42px;
+  padding: 18px;
+}
+
+.growth-card h3 {
+  color: var(--primary);
+  font-size: 24px;
+  margin: 20px 0 12px;
+}
+
+.growth-card p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.growth-card a {
+  align-items: center;
+  color: var(--primary);
+  display: inline-flex;
+  font-weight: 800;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.subjects-grid {
+  align-items: start;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.subject-summary {
+  display: grid;
+  gap: 24px;
+}
+
+.subject-stat,
+.subject-ai {
+  padding: 28px;
+}
+
+.subject-stat div {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.subject-stat strong {
+  color: var(--primary);
+  font-size: 54px;
+}
+
+.subject-stat span.good {
+  color: var(--success);
+}
+
+.subject-ai {
+  border-top: 4px solid var(--outline);
+  overflow: hidden;
+  position: relative;
+}
+
+.subject-ai .material-symbols-outlined {
+  color: var(--accent);
+}
+
+.subject-ai h3 {
+  color: var(--primary);
+  margin: 12px 0;
+}
+
+.subject-ai p {
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.subject-table-toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 28px;
+}
+
+.subject-table-toolbar button {
+  align-items: center;
+  background: var(--surface-low);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  display: inline-flex;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+}
+
+.subject-table-toolbar span {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.subject-table td {
+  font-size: 18px;
+  padding-bottom: 30px;
+  padding-top: 30px;
+}
+
+.curriculum-status {
+  align-items: center;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: 120px 1fr auto;
+  margin-top: 32px;
+  padding: 28px;
+}
+
+.curriculum-visual {
+  align-items: center;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: white;
+  display: flex;
+  height: 100px;
+  justify-content: center;
+}
+
+.curriculum-visual .material-symbols-outlined {
+  font-size: 54px;
+}
+
+.curriculum-status h3 {
+  color: var(--primary);
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.curriculum-status p {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+  .account-metrics,
+  .class-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .class-insights,
+  .subjects-grid,
+  .curriculum-status {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .management-heading,
+  .subject-table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-metrics,
+  .class-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
