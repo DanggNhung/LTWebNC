@@ -49,6 +49,21 @@ exports.edit = (req, res) => {
         }
     );
 };
+exports.search = (req, res) => {
+    const keyword = req.query.keyword || "";
+
+    db.query(
+        "SELECT * FROM students WHERE name LIKE ?",
+        [`%${keyword}%`],
+        (err, result) => {
+            if (err) throw err;
+
+            res.render("students/index", {
+                students: result
+            });
+        }
+    );
+};
 exports.update = (req, res) => {
     db.query(
         "UPDATE students SET ? WHERE id=?",

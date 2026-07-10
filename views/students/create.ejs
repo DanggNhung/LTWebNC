@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Thêm sinh viên</title>
+
+</head>
+
+<body>
+
+    <h2>Thêm sinh viên</h2>
+
+    <form action="/students/create" method="POST">
+
+        <p>
+
+            Mã sinh viên
+
+            <br>
+
+            <input
+                type="text"
+                name="student_code"
+                required
+            >
+
+        </p>
+
+        <p>
+
+            Họ và tên
+
+            <br>
+
+            <input
+                type="text"
+                name="fullname"
+                required
+            >
+
+        </p>
+
+        <p>
+
+            Giới tính
+
+            <br>
+
+            <select name="gender">
+
+                <option value="Nam">
+
+                    Nam
+
+                </option>
+
+                <option value="Nữ">
+
+                    Nữ
+
+                </option>
+
+            </select>
+
+        </p>
+
+        <p>
+
+            Ngày sinh
+
+            <br>
+
+            <input
+                type="date"
+                name="birthday"
+            >
+
+        </p>
+
+        <p>
+
+            Email
+
+            <br>
+
+            <input
+                type="email"
+                name="email"
+            >
+
+        </p>
+
+        <p>
+
+            Số điện thoại
+
+            <br>
+
+            <input
+                type="text"
+                name="phone"
+            >
+
+        </p>
+
+        <p>
+
+            Địa chỉ
+
+            <br>
+
+            <input
+                type="text"
+                name="address"
+            >
+
+        </p>
+
+        <button type="submit">
+
+            Lưu
+
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="/students">
+
+        Quay lại
+
+    </a>
+
+</body>
+
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Danh sách sinh viên</title>
+
+</head>
+
+<body>
+
+    <h2>Danh sách sinh viên</h2>
+
+    <a href="/students/create">
+
+        Thêm sinh viên
+
+    </a>
+
+    <br><br>
+
+    <table border="1" cellpadding="8">
+
+        <tr>
+
+            <th>ID</th>
+
+            <th>Mã SV</th>
+
+            <th>Họ tên</th>
+
+            <th>Giới tính</th>
+
+            <th>Ngày sinh</th>
+
+            <th>Email</th>
+
+            <th>Thao tác</th>
+
+        </tr>
+
+        <% students.forEach(student => { %>
+
+            <tr>
+
+                <td><%= student.id %></td>
+
+                <td><%= student.student_code %></td>
+
+                <td><%= student.fullname %></td>
+
+                <td><%= student.gender %></td>
+
+                <td><%= student.birthday %></td>
+
+                <td><%= student.email %></td>
+
+                <td>
+
+                    <a href="/students/<%= student.id %>">
+
+                        Chi tiết
+
+                    </a>
+
+                    |
+
+                    <a href="/students/edit/<%= student.id %>">
+
+                        Sửa
+
+                    </a>
+
+                    |
+
+                    <form
+                        action="/students/delete/<%= student.id %>"
+                        method="POST"
+                        style="display:inline;"
+                    >
+
+                        <button type="submit">
+
+                            Xóa
+
+                        </button>
+
+                    </form>
+
+                </td>
+
+            </tr>
+
+        <% }) %>
+
+    </table>
+
+</body>
+
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa thông tin cá nhân</title>
+</head>
+<body>
+    <div class="container">
+        <h2>
+            Chỉnh sửa thông tin cá nhân
+        </h2>
+    <form action="/profile/edit" method="POST">
+    <div>
+        <label>
+            Tên đăng nhập
+        </label>
+        <input
+            type="text"
+            name="username"
+            value="<%= user.username %>"
+            required
+        >
+    </div>
+    <br>
+    <div>
+        <label>
+            Vai trò
+        </label>
+        <input
+            type="text"
+            value="<%= user.role %>"
+            readonly
+        >
+    </div>
+    <br>
+    <button type="submit">
+        Lưu thay đổi
+    </button>
+    <a href="/profile">
+        Hủy
+    </a>
+</form>
+</div>
+</body>
+</html>

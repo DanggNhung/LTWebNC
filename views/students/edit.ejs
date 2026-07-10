@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Cập nhật sinh viên</title>
+
+</head>
+
+<body>
+
+    <h2>Cập nhật sinh viên</h2>
+
+    <form action="/students/edit/<%= student.id %>" method="POST">
+
+        <p>
+
+            Mã sinh viên
+
+            <br>
+
+            <input
+                type="text"
+                name="student_code"
+                value="<%= student.student_code %>"
+                required
+            >
+
+        </p>
+
+        <p>
+
+            Họ và tên
+
+            <br>
+
+            <input
+                type="text"
+                name="fullname"
+                value="<%= student.fullname %>"
+                required
+            >
+
+        </p>
+
+        <p>
+
+            Giới tính
+
+            <br>
+
+            <select name="gender">
+
+                <option
+                    value="Nam"
+                    <%= student.gender === "Nam" ? "selected" : "" %>
+                >
+
+                    Nam
+
+                </option>
+
+                <option
+                    value="Nữ"
+                    <%= student.gender === "Nữ" ? "selected" : "" %>
+                >
+
+                    Nữ
+
+                </option>
+
+            </select>
+
+        </p>
+
+        <p>
+
+            Ngày sinh
+
+            <br>
+
+            <input
+                type="date"
+                name="birthday"
+                value="<%= student.birthday ? new Date(student.birthday).toISOString().split('T')[0] : '' %>"
+            >
+
+        </p>
+
+        <p>
+
+            Email
+
+            <br>
+
+            <input
+                type="email"
+                name="email"
+                value="<%= student.email %>"
+            >
+
+        </p>
+
+        <p>
+
+            Số điện thoại
+
+            <br>
+
+            <input
+                type="text"
+                name="phone"
+                value="<%= student.phone %>"
+            >
+
+        </p>
+
+        <p>
+
+            Địa chỉ
+
+            <br>
+
+            <input
+                type="text"
+                name="address"
+                value="<%= student.address %>"
+            >
+
+        </p>
+
+        <button type="submit">
+
+            Cập nhật
+
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="/students">
+
+        Quay lại
+
+    </a>
+
+</body>
+
+</html>

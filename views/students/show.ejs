@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Chi tiết sinh viên</title>
+
+</head>
+
+<body>
+
+    <h2>Chi tiết sinh viên</h2>
+
+    <p>
+
+        <strong>ID:</strong>
+
+        <%= student.id %>
+
+    </p>
+
+    <p>
+
+        <strong>Mã sinh viên:</strong>
+
+        <%= student.student_code %>
+
+    </p>
+
+    <p>
+
+        <strong>Họ và tên:</strong>
+
+        <%= student.fullname %>
+
+    </p>
+
+    <p>
+
+        <strong>Giới tính:</strong>
+
+        <%= student.gender %>
+
+    </p>
+
+    <p>
+
+        <strong>Ngày sinh:</strong>
+
+        <%= student.birthday %>
+
+    </p>
+
+    <p>
+
+        <strong>Email:</strong>
+
+        <%= student.email %>
+
+    </p>
+
+    <p>
+
+        <strong>Số điện thoại:</strong>
+
+        <%= student.phone %>
+
+    </p>
+
+    <p>
+
+        <strong>Địa chỉ:</strong>
+
+        <%= student.address %>
+
+    </p>
+
+    <a href="/students/edit/<%= student.id %>">
+
+        Chỉnh sửa
+
+    </a>
+
+    |
+
+    <a href="/students">
+
+        Quay lại
+
+    </a>
+
+</body>
+
+</html>
