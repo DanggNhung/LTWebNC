@@ -1,12 +1,11 @@
 import { adminNavItems } from "../../data/navigation.js";
 import Icon from "../common/Icon.jsx";
 
-export default function AdminSidebar({ activeLabel = "Sinh viên", profileName = "Hồ sơ quản trị", profileRole = "Quản trị viên hệ thống", initials = "AP" }) {
+export default function AdminSidebar({ activeLabel = "Sinh viên" }) {
   return (
     <aside className="admin-sidebar">
       <div className="sidebar-brand">
-        <h1>Bảng quản trị</h1>
-        <p>Giám sát hệ thống</p>
+        <h1>Student management</h1>
       </div>
       <nav className="sidebar-nav">
         {adminNavItems.map((item) => (
@@ -16,13 +15,10 @@ export default function AdminSidebar({ activeLabel = "Sinh viên", profileName =
           </a>
         ))}
       </nav>
-      <div className="sidebar-profile">
-        <div className="avatar image-avatar">{initials}</div>
-        <div>
-          <strong>{profileName}</strong>
-          <span>{profileRole}</span>
-        </div>
-      </div>
+      <a className="sidebar-profile" href="/">
+        <Icon name="logout" />
+        <strong>Đăng xuất</strong>
+      </a>
     </aside>
   );
 }

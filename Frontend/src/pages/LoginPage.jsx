@@ -9,14 +9,9 @@ export default function LoginPage() {
           <div className="brand-mark">
             <Icon name="local_library" filled />
           </div>
-          <h1>Thư viện Lumina</h1>
-          <p>Chào mừng đến với EduTrack Pro</p>
+          <h1>Student management</h1>
         </div>
         <LoginForm />
-        <div className="login-art">
-          <Icon name="school" />
-          <Icon name="menu_book" />
-        </div>
       </section>
     </main>
   );

@@ -1,49 +1,40 @@
 import { useEffect, useState } from "react";
+import AccountsManagement from "./pages/AccountsManagement.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import ClassesManagement from "./pages/ClassesManagement.jsx";
 import FacultyDashboard from "./pages/FacultyDashboard.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import StudentResults from "./pages/StudentResults.jsx";
-import AccountsManagement from "./pages/AccountsManagement.jsx";
-import ClassesManagement from "./pages/ClassesManagement.jsx";
 import SubjectsManagement from "./pages/SubjectsManagement.jsx";
 
 const routes = {
-  login: LoginPage,
   admin: AdminDashboard,
-  accounts: AccountsManagement,
-  classes: ClassesManagement,
-  subjects: SubjectsManagement,
-  "student-results": StudentResults,
-  faculty: FacultyDashboard
+  "admin/tai-khoan": AccountsManagement,
+  "admin/lop-hoc": ClassesManagement,
+  "admin/mon-hoc": SubjectsManagement,
+  "ket-qua": StudentResults,
+  diem: FacultyDashboard
 };
 
 function getCurrentRoute() {
   const route = window.location.hash.replace("#", "");
-  return routes[route] ? route : "login";
+  return routes[route] ? route : "home";
 }
 
 export default function App() {
   const [route, setRoute] = useState(getCurrentRoute);
-  const Page = routes[route];
+  const Page = routes[route] || LoginPage;
 
   useEffect(() => {
     const onHashChange = () => setRoute(getCurrentRoute());
+    const onPopState = () => setRoute(getCurrentRoute());
     window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
+      window.removeEventListener("popstate", onPopState);
+    };
   }, []);
 
-  return (
-    <>
-      <Page />
-      <nav className="sample-switcher" aria-label="Trang mẫu">
-        <a className={route === "login" ? "active" : ""} href="#login">Đăng nhập</a>
-        <a className={route === "admin" ? "active" : ""} href="#admin">Quản trị</a>
-        <a className={route === "accounts" ? "active" : ""} href="#accounts">Tài khoản</a>
-        <a className={route === "classes" ? "active" : ""} href="#classes">Lớp học</a>
-        <a className={route === "subjects" ? "active" : ""} href="#subjects">Môn học</a>
-        <a className={route === "student-results" ? "active" : ""} href="#student-results">Sinh viên</a>
-        <a className={route === "faculty" ? "active" : ""} href="#faculty">Giảng viên</a>
-      </nav>
-    </>
-  );
+  return <Page />;
 }
