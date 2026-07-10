@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa lớp</title>
+</head>
+<body>
+    <h1>Cập nhật thông tin lớp</h1>
+    <form
+        action="/classes/<%= classItem.id %>/edit"
+        method="POST">
+        <label>
+            Mã lớp:
+        </label>
+        <br>
+        <input
+            type="text"
+            name="class_code"
+            value="<%= classItem.class_code %>"
+            required>
+        <br><br>
+        <label>
+            Tên lớp:
+        </label>
+        <br>
+        <input
+            type="text"
+            name="class_name"
+            value="<%= classItem.class_name %>"
+            required>
+        <br><br>
+        <label>
+            Mô tả:
+        </label>
+        <br>
+        <textarea
+            name="description"
+            rows="4"
+            cols="40"><%= classItem.description %></textarea>
+        <br><br>
+        <button type="submit">
+            Cập nhật
+        </button>
+        <a href="/classes">
+            Quay lại
+        </a>
+    </form>
+</body>
+
+</html>

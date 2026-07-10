@@ -85,6 +85,28 @@ exports.edit = (req, res) => {
     );
 
 };
+
+exports.show = (req, res) => {
+    const id = req.params.id;
+    db.query(
+        "SELECT * FROM classes WHERE id = ?",
+        [id],
+        (err, results) => {
+
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Lỗi cơ sở dữ liệu");
+            }
+
+            if (results.length === 0) {
+                return res.send("Không tìm thấy lớp");
+            }
+            res.render("classes/show", {
+                classItem: results[0]
+            });
+        }
+    );
+};
 exports.update = (req, res) => {
     const id = req.params.id;
     const {
