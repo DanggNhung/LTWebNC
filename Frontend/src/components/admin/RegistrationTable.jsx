@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import Icon from "../common/Icon.jsx";
 import StatusBadge from "../common/StatusBadge.jsx";
 
@@ -6,20 +7,38 @@ function getGivenNameInitial(fullName) {
   return parts.at(-1)?.charAt(0).toUpperCase() ?? "";
 }
 
-export default function RegistrationTable({ rows }) {
+function getStudentStatus(status) {
+  return status === "Bảo lưu" ? "Bảo lưu" : "Đang học";
+}
+
+function getUniqueOptions(values) {
+  return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, "vi"));
+}
+
+export default function RegistrationTable({ rows, isEditing = false, onCancelEdit, onDelete, onEdit, onSaveAll, onToggleStatus }) {
+  const [classFilter, setClassFilter] = useState("");
+  const classOptions = useMemo(() => getUniqueOptions(rows.map((row) => row.className)), [rows]);
+  const filteredRows = useMemo(
+    () => rows.filter((row) => !classFilter || row.className === classFilter),
+    [classFilter, rows]
+  );
+
   return (
+    <>
     <section className="panel registration-panel">
       <div className="panel-header">
         <div>
           <h2>Danh sách sinh viên</h2>
-          <p>Tổng số sinh viên: 12.842</p>
         </div>
         <div className="panel-actions">
           <div className="filter-controls" aria-label="Bộ lọc sinh viên">
-            <Icon name="filter_list" />
-            <button type="button">Chọn Khoa</button>
-            <button type="button">Chọn Ngành</button>
-            <button type="button">Chọn Lớp</button>
+            <select className="filter-select" value={classFilter} onChange={(event) => setClassFilter(event.target.value)}>
+              <option value="" hidden>Chọn Lớp</option>
+              <option value="">Tất cả</option>
+              {classOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -29,45 +48,68 @@ export default function RegistrationTable({ rows }) {
             <tr>
               <th>Họ và tên</th>
               <th>Mã sinh viên</th>
-              <th>Khoa</th>
-              <th>Ngành</th>
+              <th>Ngày sinh</th>
+              <th>Giới tính</th>
               <th>Lớp</th>
               <th>Trạng thái</th>
+              {isEditing && <th className="center-column edit-column" aria-label="Chỉnh sửa" />}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.studentId}>
-                <td>
-                  <div className="identity-cell">
-                    <span className={`avatar ${row.avatar}`}>{getGivenNameInitial(row.name)}</span>
-                    <span>
-                      <strong>{row.name}</strong>
-                      <small>{row.email}</small>
-                    </span>
-                  </div>
-                </td>
-                <td className="mono">{row.studentId}</td>
-                <td>{row.faculty}</td>
-                <td>{row.major}</td>
-                <td>{row.className}</td>
-                <td><StatusBadge status={row.status} /></td>
-              </tr>
-            ))}
+            {filteredRows.map((row) => {
+              const status = getStudentStatus(row.status);
+
+              return (
+                <tr key={row.studentId}>
+                  <td>
+                    <div className="identity-cell">
+                      <span className={`avatar ${row.avatar}`}>{getGivenNameInitial(row.name)}</span>
+                      <span>
+                        <strong>{row.name}</strong>
+                      </span>
+                    </div>
+                  </td>
+                  <td className="mono">{row.studentId}</td>
+                  <td>{row.birthDate}</td>
+                  <td>{row.gender}</td>
+                  <td>{row.className}</td>
+                  <td>
+                    {isEditing ? (
+                      <button className="status-toggle-button" type="button" onClick={() => onToggleStatus?.(row)}>
+                        <StatusBadge status={status} />
+                      </button>
+                    ) : (
+                      <StatusBadge status={status} />
+                    )}
+                  </td>
+                  {isEditing && (
+                    <td className="center-column edit-column">
+                      <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${row.name}`} onClick={() => onEdit?.(row)}>
+                        <Icon name="edit" />
+                      </button>
+                      <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${row.name}`} onClick={() => onDelete?.(row)}>
+                        <Icon name="delete" />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
-      <footer className="pagination pagination-centered">
-        <div>
-          <button><Icon name="chevron_left" /></button>
-          <button className="active">1</button>
-          <button>2</button>
-          <button>3</button>
-          <span>...</span>
-          <button>12</button>
-          <button><Icon name="chevron_right" /></button>
+      {isEditing && (
+        <div className="external-table-edit-actions">
+          <div className="table-edit-actions">
+            <button className="btn btn-secondary" type="button" onClick={onCancelEdit}>Hủy</button>
+            <button className="btn btn-primary" type="button" onClick={onSaveAll}>
+              <Icon name="save" />
+              <span>Lưu tất cả</span>
+            </button>
+          </div>
         </div>
-      </footer>
+      )}
     </section>
+    </>
   );
 }

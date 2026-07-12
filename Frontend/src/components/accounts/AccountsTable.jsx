@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+import { departmentAbbreviations } from "../../data/academicStructure.js";
 import Icon from "../common/Icon.jsx";
 import StatusBadge from "../common/StatusBadge.jsx";
 
@@ -16,18 +18,47 @@ function getGivenNameInitial(fullName) {
   return parts.at(-1)?.charAt(0).toUpperCase() ?? "";
 }
 
-export default function AccountsTable({ accounts }) {
+function getAccountStatus(status) {
+  return status === "Tạm khóa" ? "Tạm khóa" : "Hoạt động";
+}
+
+function getDisplayName(account) {
+  if (account.role !== "Giảng viên" || !account.department) return account.name;
+  const abbreviation = departmentAbbreviations[account.department];
+  return abbreviation ? `${account.name} (${abbreviation})` : account.name;
+}
+
+function isSystemAdmin(account) {
+  return account.id === "Admin" && account.role === "Quản trị viên";
+}
+
+function getUniqueOptions(values) {
+  return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, "vi"));
+}
+
+export default function AccountsTable({ accounts, isEditing = false, onCancelEdit, onDelete, onEdit, onSaveAll, onToggleStatus }) {
+  const [roleFilter, setRoleFilter] = useState("");
+  const roleOptions = useMemo(() => getUniqueOptions(accounts.map((account) => account.role)), [accounts]);
+  const filteredAccounts = useMemo(
+    () => accounts.filter((account) => !roleFilter || account.role === roleFilter),
+    [accounts, roleFilter]
+  );
+
   return (
     <section className="panel accounts-table-panel">
       <div className="panel-header">
         <div>
           <h2>Danh sách tài khoản</h2>
-          <p>Tổng số tài khoản: 1.284</p>
         </div>
         <div className="panel-actions">
           <div className="filter-controls" aria-label="Bộ lọc tài khoản">
-            <Icon name="filter_list" />
-            <button type="button">Chọn Vai trò</button>
+            <select className="filter-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
+              <option value="" hidden>Chọn Vai trò</option>
+              <option value="">Tất cả</option>
+              {roleOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -36,43 +67,69 @@ export default function AccountsTable({ accounts }) {
           <thead>
             <tr>
               <th>Họ và tên</th>
-              <th>Email</th>
+              <th>Mật khẩu</th>
               <th>Vai trò</th>
               <th>Trạng thái</th>
-              <th>Đăng nhập gần nhất</th>
+              {isEditing && <th className="center-column edit-column" aria-label="Chỉnh sửa" />}
             </tr>
           </thead>
           <tbody>
-            {accounts.map((account) => (
-              <tr key={`${account.role}-${account.id}`}>
-                <td>
-                  <div className="identity-cell">
-                    <span className={`avatar ${account.avatar}`}>{getGivenNameInitial(account.name)}</span>
-                    <span>
-                      <strong>{account.name}</strong>
-                      <small>ID: {account.id}</small>
-                    </span>
-                  </div>
-                </td>
-                <td>{account.email}</td>
-                <td><span className={`role-chip role-${toSlug(account.role)}`}>{account.role}</span></td>
-                <td><StatusBadge status={account.status} /></td>
-                <td>{account.lastLogin}</td>
-              </tr>
-            ))}
+            {filteredAccounts.map((account) => {
+              const status = getAccountStatus(account.status);
+
+              return (
+                <tr key={`${account.role}-${account.id}`}>
+                  <td>
+                    <div className="identity-cell">
+                      <span className={`avatar ${account.avatar}`}>{getGivenNameInitial(account.name)}</span>
+                      <span>
+                        <strong>{getDisplayName(account)}</strong>
+                        <small>ID: {account.id}</small>
+                      </span>
+                    </div>
+                  </td>
+                  <td className="mono">{account.password}</td>
+                  <td><span className={`role-chip role-${toSlug(account.role)}`}>{account.role}</span></td>
+                  <td>
+                    {isEditing && !isSystemAdmin(account) ? (
+                      <button className="status-toggle-button" type="button" onClick={() => onToggleStatus?.(account)}>
+                        <StatusBadge status={status} />
+                      </button>
+                    ) : (
+                      <StatusBadge status={status} />
+                    )}
+                  </td>
+                  {isEditing && (
+                    <td className="center-column edit-column">
+                      {!isSystemAdmin(account) && (
+                        <>
+                          <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${account.name}`} onClick={() => onEdit?.(account)}>
+                            <Icon name="edit" />
+                          </button>
+                          <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${account.name}`} onClick={() => onDelete?.(account)}>
+                            <Icon name="delete" />
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
-      <footer className="pagination pagination-centered">
-        <div>
-          <button><Icon name="chevron_left" /></button>
-          <button className="active">1</button>
-          <button>2</button>
-          <button>3</button>
-          <span>...</span>
-          <button><Icon name="chevron_right" /></button>
+      {isEditing && (
+        <div className="external-table-edit-actions">
+          <div className="table-edit-actions">
+            <button className="btn btn-secondary" type="button" onClick={onCancelEdit}>Hủy</button>
+            <button className="btn btn-primary" type="button" onClick={onSaveAll}>
+              <Icon name="save" />
+              <span>Lưu tất cả</span>
+            </button>
+          </div>
         </div>
-      </footer>
+      )}
     </section>
   );
 }

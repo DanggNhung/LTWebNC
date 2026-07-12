@@ -59,11 +59,11 @@ VITE_API_BASE_URL=http://localhost:3000/api
 Các route mẫu:
 
 - `/`
-- `/#admin`
-- `/#admin/tai-khoan`
-- `/#admin/lop-hoc`
-- `/#admin/mon-hoc`
-- `/#ket-qua`
-- `/#diem`
+- `/admin`
+- `/admin/tai-khoan`
+- `/admin/lop-hoc`
+- `/admin/mon-hoc`
+- `/sinh-vien`
+- `/giang-vien`
 
 Trong lúc backend hoặc MySQL chưa chạy, các trang quản trị vẫn dùng mock data trong `Frontend/src/data` làm fallback để giao diện không bị trắng.

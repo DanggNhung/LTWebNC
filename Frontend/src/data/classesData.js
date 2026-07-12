@@ -16,18 +16,18 @@ export const classes = [
     students: 45
   },
   {
-    id: "DL1",
-    name: "Du lịch 1",
-    major: "Du lịch",
-    faculty: "Du lịch",
+    id: "TDH1",
+    name: "Tự động hóa 1",
+    major: "Tự động hóa",
+    faculty: "Điện - Điện tử",
     instructor: "TS. Nguyễn Thu Hà",
     students: 52
   },
   {
-    id: "KS2",
-    name: "Quản trị khách sạn 2",
-    major: "Quản trị khách sạn",
-    faculty: "Du lịch",
+    id: "DTVT1",
+    name: "Điện tử viễn thông 1",
+    major: "Điện tử viễn thông",
+    faculty: "Điện - Điện tử",
     instructor: "PGS. Phạm Quốc Việt",
     students: 39
   },
@@ -35,7 +35,7 @@ export const classes = [
     id: "QTKD1",
     name: "Quản trị kinh doanh 1",
     major: "Quản trị kinh doanh",
-    faculty: "Kinh tế và kinh doanh",
+    faculty: "Kinh tế - Kinh doanh",
     instructor: "ThS. Đỗ Thanh Mai",
     students: 56
   }

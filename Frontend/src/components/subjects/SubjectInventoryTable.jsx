@@ -1,19 +1,58 @@
+import { useMemo, useState } from "react";
+import { departments } from "../../data/academicStructure.js";
 import Icon from "../common/Icon.jsx";
 
-export default function SubjectInventoryTable({ subjects }) {
+function getUniqueOptions(values) {
+  return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, "vi"));
+}
+
+export default function SubjectInventoryTable({ subjects, isEditing = false, onCancelEdit, onDelete, onEdit, onSaveAll }) {
+  const [filters, setFilters] = useState({ faculty: "", knowledgeBlock: "" });
+  const knowledgeBlockOptions = useMemo(
+    () =>
+      getUniqueOptions(
+        subjects
+          .filter((subject) => !filters.faculty || subject.faculty === filters.faculty)
+          .map((subject) => subject.knowledgeBlock)
+      ),
+    [filters.faculty, subjects]
+  );
+  const filteredSubjects = useMemo(
+    () =>
+      subjects.filter(
+        (subject) =>
+          (!filters.faculty || subject.faculty === filters.faculty) &&
+          (!filters.knowledgeBlock || subject.knowledgeBlock === filters.knowledgeBlock)
+      ),
+    [filters, subjects]
+  );
+
   return (
     <section className="panel subject-inventory">
       <div className="panel-header">
         <div>
           <h2>Danh sách môn học</h2>
-          <p>Tổng số môn học: 124</p>
         </div>
         <div className="panel-actions">
           <div className="filter-controls" aria-label="Bộ lọc môn học">
-            <Icon name="filter_list" />
-            <button type="button">Chọn Khoa</button>
-            <button type="button">Chọn Ngành</button>
-            <button type="button">Chọn Khối kiến thức</button>
+            <select
+              className="filter-select"
+              value={filters.faculty}
+              onChange={(event) => setFilters({ faculty: event.target.value, knowledgeBlock: "" })}
+            >
+              <option value="" hidden>Chọn Khoa</option>
+              <option value="">Tất cả</option>
+              {departments.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+            <select className="filter-select" value={filters.knowledgeBlock} onChange={(event) => setFilters((current) => ({ ...current, knowledgeBlock: event.target.value }))}>
+              <option value="" hidden>Chọn Khối kiến thức</option>
+              <option value="">Tất cả</option>
+              {knowledgeBlockOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -25,35 +64,46 @@ export default function SubjectInventoryTable({ subjects }) {
               <th className="subject-name-column">Tên môn học</th>
               <th className="center-column credit-column">Số tín chỉ</th>
               <th>Khoa</th>
-              <th>Ngành</th>
+              <th>Giảng viên hướng dẫn</th>
               <th>Khối kiến thức</th>
+              {isEditing && <th className="center-column edit-column" aria-label="Chỉnh sửa" />}
             </tr>
           </thead>
           <tbody>
-            {subjects.map((subject) => (
+            {filteredSubjects.map((subject) => (
               <tr key={subject.code}>
                 <td className="mono">{subject.code}</td>
                 <td className="subject-name-column"><strong>{subject.name}</strong></td>
                 <td className="center-column credit-column">{subject.credits}</td>
                 <td>{subject.faculty}</td>
-                <td>{subject.major}</td>
+                <td>{subject.instructor || "Chưa phân công"}</td>
                 <td>{subject.knowledgeBlock}</td>
+                {isEditing && (
+                  <td className="center-column edit-column">
+                    <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${subject.name}`} onClick={() => onEdit?.(subject)}>
+                      <Icon name="edit" />
+                    </button>
+                    <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${subject.name}`} onClick={() => onDelete?.(subject)}>
+                      <Icon name="delete" />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <footer className="pagination pagination-centered">
-        <div>
-          <button><Icon name="chevron_left" /></button>
-          <button className="active">1</button>
-          <button>2</button>
-          <button>3</button>
-          <span>...</span>
-          <button>16</button>
-          <button><Icon name="chevron_right" /></button>
+      {isEditing && (
+        <div className="external-table-edit-actions">
+          <div className="table-edit-actions">
+            <button className="btn btn-secondary" type="button" onClick={onCancelEdit}>Hủy</button>
+            <button className="btn btn-primary" type="button" onClick={onSaveAll}>
+              <Icon name="save" />
+              <span>Lưu tất cả</span>
+            </button>
+          </div>
         </div>
-      </footer>
+      )}
     </section>
   );
 }

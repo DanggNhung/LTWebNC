@@ -1,17 +1,16 @@
 const studentRepository = require("../repositories/studentRepository");
-const { avatarColor, getGivenNameInitial, inferFaculty } = require("../utils/formatters");
+const { avatarColor, formatDate, getGivenNameInitial } = require("../utils/formatters");
 
 function toStudentDto(row, index) {
   const studentId = row.student_code || String(row.id).padStart(8, "0");
-  const major = row.major || "Chưa cập nhật";
 
   return {
     id: row.id,
     name: row.fullname || "Chưa cập nhật",
     email: row.email || `${studentId}@sinhvien-uni.edu.vn`,
     studentId,
-    faculty: inferFaculty(major),
-    major,
+    birthDate: formatDate(row.birthday),
+    gender: row.gender || "Chưa cập nhật",
     className: row.class_code || row.class_name || "Chưa phân lớp",
     status: "Đang học",
     avatar: avatarColor(index),

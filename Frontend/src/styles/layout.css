@@ -79,8 +79,7 @@
 }
 
 .admin-topbar,
-.student-header,
-.faculty-header {
+.user-topbar {
   align-items: center;
   background: var(--surface-high);
   border-bottom: 1px solid var(--outline);
@@ -103,9 +102,7 @@
 }
 
 .admin-breadcrumb,
-.student-header nav,
-.faculty-user,
-.faculty-title {
+.topbar-profile summary {
   align-items: center;
   display: flex;
   gap: 14px;
@@ -117,22 +114,89 @@
   font-weight: 900;
 }
 
-.admin-breadcrumb span:last-child,
-.faculty-title span {
+.admin-breadcrumb span:last-child {
   color: var(--primary);
   font-weight: 800;
 }
 
-.faculty-title strong,
-.student-header strong {
+.topbar-brand {
   color: var(--primary);
   font-size: 28px;
   font-weight: 900;
 }
 
-.faculty-title span {
-  border-bottom: 2px solid var(--primary);
-  padding-bottom: 4px;
+.user-topbar {
+  justify-content: space-between;
+}
+
+.topbar-profile {
+  position: relative;
+}
+
+.topbar-profile summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.topbar-profile summary::-webkit-details-marker {
+  display: none;
+}
+
+.topbar-avatar {
+  background: var(--primary);
+  color: white;
+}
+
+.profile-menu {
+  background: var(--surface-high);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: grid;
+  min-width: 260px;
+  padding: 10px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  z-index: 20;
+}
+
+.profile-menu-info {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px 14px;
+}
+
+.profile-menu-info strong {
+  color: var(--primary);
+}
+
+.profile-menu-info span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.profile-menu-actions {
+  border-top: 1px solid var(--outline);
+  display: grid;
+  padding-top: 8px;
+}
+
+.profile-menu a {
+  align-items: center;
+  border-radius: var(--radius-sm);
+  display: flex;
+  font-weight: 800;
+  gap: 10px;
+  padding: 12px;
+}
+
+.profile-menu a .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.profile-menu a:hover {
+  background: var(--surface-mid);
 }
 
 .page-heading {
@@ -155,16 +219,62 @@
   margin-top: 6px;
 }
 
+.score-summary {
+  position: relative;
+}
+
+.score-summary summary {
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: white;
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+  min-width: 132px;
+  padding: 12px 18px;
+  text-align: center;
+}
+
+.score-summary summary::-webkit-details-marker {
+  display: none;
+}
+
+.score-summary-menu {
+  background: var(--surface-high);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 10px;
+  min-width: 320px;
+  padding: 16px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 20;
+}
+
+.score-summary-menu span {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  gap: 20px;
+}
+
+.score-summary-menu strong {
+  color: var(--primary);
+}
+
 .student-grid,
 .faculty-grid {
   align-items: start;
   display: grid;
   gap: 24px;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.semester-stack,
-.faculty-insights {
+.semester-stack {
   display: grid;
   gap: 20px;
 }
@@ -205,8 +315,7 @@
   }
 
   .admin-topbar,
-  .student-header,
-  .faculty-header,
+  .user-topbar,
   .page-heading {
     align-items: stretch;
     flex-direction: column;
@@ -219,5 +328,15 @@
   .faculty-content,
   .management-content {
     padding: 18px;
+  }
+
+  .profile-menu {
+    left: 0;
+    right: auto;
+  }
+
+  .score-summary-menu {
+    left: 0;
+    right: auto;
   }
 }

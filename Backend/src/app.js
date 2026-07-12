@@ -27,8 +27,11 @@ app.use(
 app.get("/", (req, res) => {
   res.json({
     data: {
-      service: "Student Management API",
-      docs: "/api/health"
+      service: "student-management-api",
+      status: "ok",
+      apiBaseUrl: "/api",
+      frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+      endpoints: ["/api/health", "/api/students", "/api/classes", "/api/subjects", "/api/accounts"]
     }
   });
 });
