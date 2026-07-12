@@ -40,8 +40,27 @@ function avatarColor(index) {
   return colors[index % colors.length];
 }
 
+function formatDate(value) {
+  if (!value) {
+    return "Chưa cập nhật";
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(date);
+}
+
 module.exports = {
   avatarColor,
+  formatDate,
   getGivenNameInitial,
   inferFaculty,
   normalizeRole

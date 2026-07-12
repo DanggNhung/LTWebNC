@@ -3,19 +3,6 @@
   min-height: 100vh;
 }
 
-.student-header > div:first-child {
-  align-items: center;
-  display: flex;
-  gap: 16px;
-}
-
-.student-header > div:first-child span {
-  border-left: 1px solid var(--outline);
-  color: var(--primary);
-  font-weight: 800;
-  padding-left: 16px;
-}
-
 .semester-card {
   overflow: hidden;
 }
@@ -27,103 +14,9 @@
   padding: 22px 28px;
 }
 
-.semester-header h2,
-.progress-card h3,
-.quick-links h3 {
+.semester-header h2 {
   color: var(--primary);
   font-size: 20px;
-}
-
-.student-summary {
-  display: grid;
-  gap: 20px;
-}
-
-.gpa-card {
-  background: var(--primary);
-  border-radius: var(--radius-lg);
-  color: white;
-  min-height: 210px;
-  overflow: hidden;
-  padding: 28px;
-  position: relative;
-}
-
-.gpa-card .material-symbols-outlined {
-  color: var(--accent);
-  font-size: 42px;
-}
-
-.gpa-card p {
-  color: rgba(255, 255, 255, 0.74);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 18px;
-  text-transform: uppercase;
-}
-
-.gpa-card strong {
-  display: block;
-  font-size: 56px;
-  margin: 4px 0;
-}
-
-.gpa-card span {
-  color: rgba(255, 255, 255, 0.74);
-}
-
-.progress-card,
-.quick-links {
-  padding: 24px;
-}
-
-.ring-progress {
-  align-items: center;
-  background:
-    radial-gradient(circle closest-side, white 72%, transparent 73%),
-    conic-gradient(var(--accent) var(--value), #e7e8e9 0);
-  border-radius: 50%;
-  display: flex;
-  height: 150px;
-  justify-content: center;
-  margin: 24px auto;
-  width: 150px;
-}
-
-.ring-progress strong {
-  color: var(--primary);
-  font-size: 28px;
-}
-
-.progress-card p {
-  color: var(--muted);
-  text-align: center;
-}
-
-.quick-links {
-  display: grid;
-  gap: 14px;
-}
-
-.quick-links a {
-  align-items: center;
-  border: 1px solid var(--outline);
-  border-radius: var(--radius);
-  display: flex;
-  font-weight: 700;
-  justify-content: space-between;
-  padding: 14px;
-}
-
-.small-ai-card {
-  background: white;
-  color: var(--muted);
-}
-
-.small-ai-card .material-symbols-outlined {
-  color: var(--secondary);
-  font-size: 34px;
 }
 
 .login-page {
@@ -269,6 +162,13 @@
   margin: 2px 0 20px;
 }
 
+.login-error {
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 700;
+  margin: -4px 0 14px;
+}
+
 .login-options label {
   align-items: center;
   display: flex;
@@ -309,7 +209,7 @@
   align-items: end;
   display: grid;
   gap: 18px;
-  grid-template-columns: 280px minmax(240px, 1fr) auto;
+  grid-template-columns: 280px minmax(240px, 1fr);
   margin-bottom: 24px;
   padding: 20px;
 }
@@ -339,68 +239,13 @@
   overflow: hidden;
 }
 
+.grade-table {
+  min-width: 1280px;
+}
+
 .grade-table input {
   max-width: 84px;
-}
-
-.faculty-insights .ai-illustration {
-  align-items: center;
-  background: white;
-  border-radius: var(--radius-lg);
-  color: rgba(3, 0, 87, 0.14);
-  display: flex;
-  height: 220px;
-  justify-content: center;
-}
-
-.faculty-insights .ai-illustration .material-symbols-outlined {
-  font-size: 150px;
-}
-
-.faculty-insights .ai-card {
-  background: #f9fbff;
-  color: var(--muted);
-}
-
-.faculty-insights .ai-card h3 {
-  color: var(--primary);
-  display: block;
-  margin: 12px 0;
-}
-
-.faculty-insights .ai-card > .material-symbols-outlined {
-  color: var(--secondary);
-  font-size: 34px;
-}
-
-.faculty-insights .ai-card a {
-  align-items: center;
-  color: var(--primary);
-  display: inline-flex;
-  font-weight: 800;
-  gap: 6px;
-  margin-top: 18px;
-}
-
-.compliance-card {
-  padding: 24px;
-}
-
-.compliance-card h3 {
-  margin: 10px 0;
-}
-
-.compliance-card p {
-  color: var(--muted);
-}
-
-.compliance-card span {
-  align-items: center;
-  color: var(--success);
-  display: flex;
-  font-weight: 800;
-  gap: 8px;
-  margin-top: 18px;
+  text-align: center;
 }
 
 @media (max-width: 900px) {
@@ -485,10 +330,71 @@
   color: white;
 }
 
+.profile-panel {
+  padding: 28px;
+}
+
+.profile-summary {
+  align-items: center;
+  border-bottom: 1px solid var(--outline);
+  display: flex;
+  gap: 18px;
+  padding-bottom: 24px;
+}
+
+.profile-avatar {
+  height: 64px;
+  min-width: 64px;
+  width: 64px;
+}
+
+.profile-summary h2 {
+  color: var(--primary);
+  font-size: 26px;
+}
+
+.profile-summary p {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.profile-info-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 24px;
+}
+
+.profile-info-item {
+  background: var(--surface-low);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.profile-info-item span {
+  color: #4d4d59;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.profile-info-item strong {
+  color: var(--text);
+  font-size: 17px;
+}
+
 @media (max-width: 720px) {
   .admin-page-header,
   .management-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .profile-info-grid {
+    grid-template-columns: 1fr;
   }
 }

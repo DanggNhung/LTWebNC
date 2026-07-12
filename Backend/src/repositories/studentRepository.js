@@ -7,9 +7,10 @@ async function findAll() {
       students.student_code,
       students.fullname,
       students.email,
+      students.birthday,
+      students.gender,
       classes.class_code,
-      classes.class_name,
-      classes.major
+      classes.class_name
     FROM students
     LEFT JOIN classes ON students.class_id = classes.id
     ORDER BY students.id DESC

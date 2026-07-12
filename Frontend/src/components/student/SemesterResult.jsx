@@ -1,3 +1,4 @@
+import { roundOne, toGpa } from "../../utils/gradeUtils.js";
 import StatusBadge from "../common/StatusBadge.jsx";
 
 export default function SemesterResult({ semester }) {
@@ -5,30 +6,40 @@ export default function SemesterResult({ semester }) {
     <section className="panel semester-card">
       <div className="semester-header">
         <h2>{semester.term}</h2>
-        <StatusBadge status={`ĐTB ${semester.gpa}`} />
       </div>
-      <table className="data-table compact-table">
-        <thead>
-          <tr>
-            <th>Mã môn</th>
-            <th>Môn học</th>
-            <th>Tín chỉ</th>
-            <th>Điểm</th>
-            <th>Xếp loại</th>
-          </tr>
-        </thead>
-        <tbody>
-          {semester.rows.map((row) => (
-            <tr key={row.code}>
-              <td className="mono">{row.code}</td>
-              <td>{row.subject}</td>
-              <td>{row.credits}</td>
-              <td>{row.score}</td>
-              <td><strong>{row.grade}</strong></td>
+      <div className="table-wrap">
+        <table className="data-table semester-table">
+          <thead>
+            <tr>
+              <th className="code-column">Mã môn</th>
+              <th className="subject-name-column">Tên môn học</th>
+              <th className="center-column credit-column">Số tín chỉ</th>
+              <th className="center-column score-column">Điểm hệ số 10</th>
+              <th className="center-column score-column">Điểm hệ số 4</th>
+              <th className="center-column letter-column">Điểm chữ</th>
+              <th className="center-column status-column">Trạng thái</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {semester.rows.map((row) => {
+              const { score4, letter } = toGpa(row.score10);
+              const status = row.score10 >= 4 ? "Đạt" : "Học lại";
+
+              return (
+                <tr key={row.code}>
+                  <td className="mono code-column">{row.code}</td>
+                  <td className="subject-name-column">{row.subject}</td>
+                  <td className="center-column credit-column">{row.credits}</td>
+                  <td className="center-column score-column">{roundOne(row.score10)}</td>
+                  <td className="center-column score-column">{roundOne(score4)}</td>
+                  <td className="center-column letter-column"><strong>{letter}</strong></td>
+                  <td className="center-column status-column"><StatusBadge status={status} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

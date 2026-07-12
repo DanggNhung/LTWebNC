@@ -3,7 +3,7 @@ export default function StatusBadge({ status }) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
+    .replace(/[đĐ]/g, "d")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
   return <span className={`status-badge status-${normalized}`}>{status}</span>;

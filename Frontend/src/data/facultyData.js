@@ -1,15 +1,7 @@
-export const facultyCourses = [
-  "Vật lý nâng cao B",
-  "Cơ sở an toàn thông tin",
-  "Cấu trúc dữ liệu",
-  "Công nghệ phần mềm"
-];
-
 export const gradeRows = [
-  { id: "ST-0241", name: "Hoàng Gia Huy", midterm: 88, final: 92, average: 90, status: "Sẵn sàng" },
-  { id: "ST-0318", name: "Vũ Thanh Hà", midterm: 94, final: 96, average: 95, status: "Sẵn sàng" },
-  { id: "ST-0440", name: "Ngô Minh Khang", midterm: 78, final: 84, average: 81, status: "Cần rà soát" },
-  { id: "ST-0522", name: "Bùi Linh Chi", midterm: 91, final: 89, average: 90, status: "Sẵn sàng" },
-  { id: "ST-0661", name: "Đặng Tuấn Kiệt", midterm: 69, final: 74, average: 72, status: "Cần hỗ trợ" },
-  { id: "ST-0713", name: "Phan Thảo Vy", midterm: 85, final: 88, average: 87, status: "Sẵn sàng" }
+  { id: "26010207", name: "Trần Quốc Bảo", attendance: 8.5, midterm: 7.4, final: 8.2 },
+  { id: "26010318", name: "Nguyễn Minh Anh", attendance: 9.0, midterm: 8.6, final: 9.1 },
+  { id: "25020411", name: "Lê Hà Linh", attendance: 7.8, midterm: 6.9, final: 7.2 },
+  { id: "24030529", name: "Phạm Đức Bình", attendance: 6.2, midterm: 4.8, final: 4.5 },
+  { id: "23040156", name: "Đỗ Ngọc Mai", attendance: 8.0, midterm: 7.1, final: 7.8 }
 ];

@@ -1,14 +1,18 @@
-import { facultyCourses } from "../../data/facultyData.js";
-import Button from "../common/Button.jsx";
+import { subjects as fallbackSubjects } from "../../data/subjectsData.js";
+import useApiResource from "../../hooks/useApiResource.js";
 import Icon from "../common/Icon.jsx";
 
 export default function GradeToolbar() {
+  const { data: subjects } = useApiResource("/subjects", fallbackSubjects);
+
   return (
     <section className="panel grade-toolbar">
       <div>
         <p className="label-caps">Môn học</p>
-        <select defaultValue={facultyCourses[0]}>
-          {facultyCourses.map((course) => <option key={course}>{course}</option>)}
+        <select defaultValue={subjects[0]?.code || ""}>
+          {subjects.map((subject) => (
+            <option key={subject.code} value={subject.code}>{subject.name}</option>
+          ))}
         </select>
       </div>
       <label>
@@ -18,10 +22,6 @@ export default function GradeToolbar() {
           <input placeholder="Tên hoặc mã sinh viên" />
         </span>
       </label>
-      <div className="toolbar-buttons">
-        <Button variant="secondary" icon="download">Xuất file</Button>
-        <Button variant="secondary" icon="print">In</Button>
-      </div>
     </section>
   );
 }
