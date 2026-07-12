@@ -1,6 +1,13 @@
 import Icon from "../common/Icon.jsx";
+import { requestJson } from "../../services/apiClient.js";
 
 export default function UserTopbar({ profileHref, showProfileLink = true, user }) {
+  async function handleLogout(event) {
+    event.preventDefault();
+    await requestJson("/auth/logout", { method: "POST" }).catch(() => null);
+    window.location.href = "/";
+  }
+
   return (
     <header className="user-topbar">
       <strong className="topbar-brand">Student management</strong>
@@ -14,7 +21,7 @@ export default function UserTopbar({ profileHref, showProfileLink = true, user }
           </div>
           <div className="profile-menu-actions">
             {showProfileLink && <a href={profileHref}><Icon name="person" /> Thông tin cá nhân</a>}
-            <a href="/"><Icon name="logout" /> Đăng xuất</a>
+            <a href="/" onClick={handleLogout}><Icon name="logout" /> Đăng xuất</a>
           </div>
         </div>
       </details>

@@ -6,10 +6,8 @@ import SuccessToast from "../components/common/SuccessToast.jsx";
 import AdminPageHeader from "../components/layout/AdminPageHeader.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import AdminTopbar from "../components/layout/AdminTopbar.jsx";
-import { classes as fallbackClasses } from "../data/classesData.js";
 import { classFormFields } from "../data/adminFormFields.js";
-import useApiResource from "../hooks/useApiResource.js";
-import usePersistentAdminRows from "../hooks/usePersistentAdminRows.js";
+import useApiRows from "../hooks/useApiRows.js";
 
 function getClassInitialValues(classItem) {
   return {
@@ -17,7 +15,6 @@ function getClassInitialValues(classItem) {
     className: classItem.name,
     major: classItem.major,
     department: classItem.faculty,
-    advisor: classItem.instructor,
     size: classItem.students
   };
 }
@@ -29,23 +26,45 @@ function buildClassRow(values, existingRow = {}) {
     name: values.className,
     major: values.major,
     faculty: values.department,
-    instructor: values.advisor,
     students: Number(values.size)
   };
 }
 
+function toClassPayload(row) {
+  return {
+    classCode: row.id,
+    className: row.name,
+    major: row.major,
+    faculty: row.faculty,
+    course: null
+  };
+}
+
+function getDatabaseId(row) {
+  const databaseId = row.databaseId ?? (Number.isInteger(Number(row.id)) ? row.id : null);
+
+  if (!databaseId) {
+    throw new Error("Dữ liệu lớp học chưa có databaseId. Hãy tải dữ liệu từ MySQL trước khi chỉnh sửa.");
+  }
+
+  return databaseId;
+}
+
+function rowsChanged(firstRow, secondRow) {
+  return JSON.stringify(toClassPayload(firstRow)) !== JSON.stringify(toClassPayload(secondRow));
+}
+
 export default function ClassesManagement() {
-  const { data: sourceClasses } = useApiResource("/classes", fallbackClasses);
-  const { rows, saveRows } = usePersistentAdminRows("admin-classes", sourceClasses);
+  const { createRow, deleteRow, rows, updateRow } = useApiRows("/classes", []);
   const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState(rows);
+  const [draftRows, setDraftRows] = useState([]);
   const [modalConfig, setModalConfig] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
 
   const displayedRows = isTableEditing ? draftRows : rows;
 
-  function showSuccess() {
-    setToastMessage("Thành công");
+  function showMessage(message = "Thành công") {
+    setToastMessage(message);
     window.setTimeout(() => setToastMessage(""), 1800);
   }
 
@@ -59,13 +78,29 @@ export default function ClassesManagement() {
     setIsTableEditing(false);
   }
 
-  function saveAllChanges() {
-    saveRows(draftRows);
-    setIsTableEditing(false);
-    showSuccess();
+  async function saveAllChanges() {
+    const draftByKey = new Map(draftRows.map((row) => [row.id, row]));
+    const rowsByKey = new Map(rows.map((row) => [row.id, row]));
+    const deletedRows = rows.filter((row) => !draftByKey.has(row.id));
+    const updatedRows = draftRows.filter((row) => rowsByKey.has(row.id) && rowsChanged(row, rowsByKey.get(row.id)));
+
+    try {
+      for (const row of deletedRows) {
+        await deleteRow(getDatabaseId(row));
+      }
+
+      for (const row of updatedRows) {
+        await updateRow(getDatabaseId(rowsByKey.get(row.id)), toClassPayload(row));
+      }
+
+      setIsTableEditing(false);
+      showMessage();
+    } catch (error) {
+      showMessage(error.message);
+    }
   }
 
-  function handleSubmit(values) {
+  async function handleSubmit(values) {
     if (modalConfig?.mode === "edit") {
       setDraftRows((currentRows) =>
         currentRows.map((row) =>
@@ -75,10 +110,13 @@ export default function ClassesManagement() {
       return;
     }
 
-    const nextRows = [buildClassRow(values), ...rows];
-    saveRows(nextRows);
-    setDraftRows(nextRows);
-    showSuccess();
+    try {
+      await createRow(toClassPayload(buildClassRow(values)));
+      showMessage();
+    } catch (error) {
+      showMessage(error.message);
+      throw error;
+    }
   }
 
   return (
@@ -89,7 +127,7 @@ export default function ClassesManagement() {
         <div className="management-content">
           <AdminPageHeader
             title="Lớp học"
-            description="Quản lý mã lớp, tên lớp, ngành, khoa, giảng viên phụ trách và sĩ số."
+            description="Quản lý mã lớp, tên lớp, ngành, khoa và sĩ số của từng lớp học."
             action={(
               <div className="admin-header-actions">
                 <Button icon="add" onClick={() => setModalConfig({ mode: "add", initialValues: {} })}>Thêm lớp học</Button>

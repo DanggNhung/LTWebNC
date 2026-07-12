@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
 import Icon from "../common/Icon.jsx";
 import StatusBadge from "../common/StatusBadge.jsx";
 
-function getGivenNameInitial(fullName) {
+function getGivenNameInitial(fullName = "") {
   const parts = fullName.trim().split(/\s+/);
   return parts.at(-1)?.charAt(0).toUpperCase() ?? "";
 }
@@ -11,35 +10,20 @@ function getStudentStatus(status) {
   return status === "Bảo lưu" ? "Bảo lưu" : "Đang học";
 }
 
-function getUniqueOptions(values) {
-  return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, "vi"));
-}
-
-export default function RegistrationTable({ rows, isEditing = false, onCancelEdit, onDelete, onEdit, onSaveAll, onToggleStatus }) {
-  const [classFilter, setClassFilter] = useState("");
-  const classOptions = useMemo(() => getUniqueOptions(rows.map((row) => row.className)), [rows]);
-  const filteredRows = useMemo(
-    () => rows.filter((row) => !classFilter || row.className === classFilter),
-    [classFilter, rows]
-  );
-
+export default function RegistrationTable({
+  rows,
+  isEditing = false,
+  onCancelEdit,
+  onDelete,
+  onEdit,
+  onSaveAll,
+  onToggleStatus
+}) {
   return (
-    <>
     <section className="panel registration-panel">
       <div className="panel-header">
         <div>
           <h2>Danh sách sinh viên</h2>
-        </div>
-        <div className="panel-actions">
-          <div className="filter-controls" aria-label="Bộ lọc sinh viên">
-            <select className="filter-select" value={classFilter} onChange={(event) => setClassFilter(event.target.value)}>
-              <option value="" hidden>Chọn Lớp</option>
-              <option value="">Tất cả</option>
-              {classOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
       <div className="table-wrap">
@@ -56,7 +40,7 @@ export default function RegistrationTable({ rows, isEditing = false, onCancelEdi
             </tr>
           </thead>
           <tbody>
-            {filteredRows.map((row) => {
+            {rows.map((row) => {
               const status = getStudentStatus(row.status);
 
               return (
@@ -110,6 +94,5 @@ export default function RegistrationTable({ rows, isEditing = false, onCancelEdi
         </div>
       )}
     </section>
-    </>
   );
 }

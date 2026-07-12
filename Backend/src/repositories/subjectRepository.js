@@ -1,27 +1,42 @@
 const db = require("../config/database");
+const { buildInsert, buildUpdate } = require("../utils/sql");
 
 async function findAll() {
   const [rows] = await db.query(`
     SELECT
-      id,
-      subject_code,
-      subject_name,
-      credits,
-      description
+      subjects.id,
+      subjects.subject_code,
+      subjects.subject_name,
+      subjects.credits,
+      subjects.knowledge_block,
+      subjects.description,
+      subjects.faculty_id,
+      subjects.lecturer_id,
+      faculties.faculty_name,
+      lecturers.fullname AS lecturer_name
     FROM subjects
-    ORDER BY subject_code ASC
+    INNER JOIN faculties ON subjects.faculty_id = faculties.id
+    LEFT JOIN lecturers ON subjects.lecturer_id = lecturers.id
+    ORDER BY subjects.subject_code ASC
   `);
 
   return rows;
 }
 
+async function findByCode(subjectCode) {
+  const [rows] = await db.query("SELECT * FROM subjects WHERE subject_code = ?", [subjectCode]);
+  return rows[0] || null;
+}
+
 async function create(payload) {
-  const [result] = await db.query("INSERT INTO subjects SET ?", payload);
+  const query = buildInsert("subjects", payload);
+  const [result] = await db.query(query.sql, query.values);
   return result.insertId;
 }
 
 async function update(id, payload) {
-  const [result] = await db.query("UPDATE subjects SET ? WHERE id = ?", [payload, id]);
+  const query = buildUpdate("subjects", payload, id);
+  const [result] = await db.query(query.sql, query.values);
   return result.affectedRows;
 }
 
@@ -33,6 +48,7 @@ async function remove(id) {
 module.exports = {
   create,
   findAll,
+  findByCode,
   remove,
   update
 };

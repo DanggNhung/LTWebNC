@@ -30,7 +30,6 @@ export const classFormFields = [
     dependsOn: "department",
     optionMap: majorsByDepartment
   },
-  { name: "advisor", label: "Giảng viên phụ trách", placeholder: "Nhập tên giảng viên" },
   { name: "size", label: "Sĩ số", type: "number", placeholder: "Nhập sĩ số" }
 ];
 
@@ -68,7 +67,7 @@ export const accountFormFields = [
     name: "role",
     label: "Vai trò",
     type: "select",
-    options: ["Sinh viên", "Giảng viên", "Quản trị viên"]
+    options: ["Sinh viên", "Giảng viên"]
   },
   {
     name: "department",

@@ -32,6 +32,11 @@ function isSystemAdmin(account) {
   return account.id === "Admin" && account.role === "Quản trị viên";
 }
 
+function getPasswordDisplay(account) {
+  if (isSystemAdmin(account)) return "SMAdmin@2026!";
+  return account.hasPassword || account.password ? "Đã đặt" : "Chưa đặt";
+}
+
 function getUniqueOptions(values) {
   return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, "vi"));
 }
@@ -88,7 +93,7 @@ export default function AccountsTable({ accounts, isEditing = false, onCancelEdi
                       </span>
                     </div>
                   </td>
-                  <td className="mono">{account.password}</td>
+                  <td className="mono">{getPasswordDisplay(account)}</td>
                   <td><span className={`role-chip role-${toSlug(account.role)}`}>{account.role}</span></td>
                   <td>
                     {isEditing && !isSystemAdmin(account) ? (

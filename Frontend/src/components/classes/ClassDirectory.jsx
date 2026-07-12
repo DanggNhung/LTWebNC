@@ -57,7 +57,6 @@ export default function ClassDirectory({ classes, isEditing = false, onCancelEdi
               <th>Tên lớp</th>
               <th>Ngành</th>
               <th>Khoa</th>
-              <th>Giảng viên phụ trách</th>
               <th className="center-column">Sĩ số</th>
               {isEditing && <th className="center-column edit-column" aria-label="Chỉnh sửa" />}
             </tr>
@@ -69,7 +68,6 @@ export default function ClassDirectory({ classes, isEditing = false, onCancelEdi
                 <td><strong>{item.name}</strong></td>
                 <td>{item.major}</td>
                 <td>{item.faculty}</td>
-                <td>{item.instructor}</td>
                 <td className="center-column">{item.students}</td>
                 {isEditing && (
                   <td className="center-column edit-column">

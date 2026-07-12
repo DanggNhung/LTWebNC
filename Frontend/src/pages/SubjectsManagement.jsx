@@ -6,11 +6,8 @@ import AdminPageHeader from "../components/layout/AdminPageHeader.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import AdminTopbar from "../components/layout/AdminTopbar.jsx";
 import SubjectInventoryTable from "../components/subjects/SubjectInventoryTable.jsx";
-import { accounts as fallbackAccounts } from "../data/accountsData.js";
 import { subjectFormFields } from "../data/adminFormFields.js";
-import { subjects as fallbackSubjects } from "../data/subjectsData.js";
-import useApiResource from "../hooks/useApiResource.js";
-import usePersistentAdminRows from "../hooks/usePersistentAdminRows.js";
+import useApiRows from "../hooks/useApiRows.js";
 
 function getSubjectInitialValues(subject) {
   return {
@@ -18,7 +15,7 @@ function getSubjectInitialValues(subject) {
     subjectName: subject.name,
     credits: subject.credits,
     department: subject.faculty,
-    instructor: subject.instructor,
+    instructor: subject.instructor === "Chưa phân công" ? "" : subject.instructor,
     knowledgeBlock: subject.knowledgeBlock
   };
 }
@@ -35,17 +32,33 @@ function buildSubjectRow(values, existingRow = {}) {
   };
 }
 
-function readStoredRows(storageKey, fallbackRows) {
-  try {
-    const storedValue = localStorage.getItem(storageKey);
-    return storedValue ? JSON.parse(storedValue) : fallbackRows;
-  } catch {
-    return fallbackRows;
-  }
+function toSubjectPayload(row) {
+  return {
+    subjectCode: row.code,
+    subjectName: row.name,
+    credits: Number(row.credits),
+    faculty: row.faculty,
+    instructor: row.instructor === "Chưa phân công" ? "" : row.instructor,
+    knowledgeBlock: row.knowledgeBlock
+  };
 }
 
-function getInstructorOptionMap() {
-  return readStoredRows("admin-accounts", fallbackAccounts)
+function getDatabaseId(row) {
+  const databaseId = row.databaseId ?? row.id;
+
+  if (!databaseId) {
+    throw new Error("Dữ liệu môn học chưa có databaseId. Hãy tải dữ liệu từ MySQL trước khi chỉnh sửa.");
+  }
+
+  return databaseId;
+}
+
+function rowsChanged(firstRow, secondRow) {
+  return JSON.stringify(toSubjectPayload(firstRow)) !== JSON.stringify(toSubjectPayload(secondRow));
+}
+
+function getInstructorOptionMap(accounts) {
+  return accounts
     .filter((account) => account.role === "Giảng viên" && account.department)
     .reduce((optionMap, account) => {
       return {
@@ -56,21 +69,21 @@ function getInstructorOptionMap() {
 }
 
 export default function SubjectsManagement() {
-  const { data: sourceSubjects } = useApiResource("/subjects", fallbackSubjects);
-  const { rows, saveRows } = usePersistentAdminRows("admin-subjects", sourceSubjects);
+  const { createRow, deleteRow, rows, updateRow } = useApiRows("/subjects", []);
+  const { rows: accountRows } = useApiRows("/accounts", []);
   const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState(rows);
+  const [draftRows, setDraftRows] = useState([]);
   const [modalConfig, setModalConfig] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
 
   const displayedRows = isTableEditing ? draftRows : rows;
-  const instructorOptionMap = getInstructorOptionMap();
+  const instructorOptionMap = getInstructorOptionMap(accountRows);
   const dynamicSubjectFormFields = subjectFormFields.map((field) =>
     field.name === "instructor" ? { ...field, optionMap: instructorOptionMap } : field
   );
 
-  function showSuccess() {
-    setToastMessage("Thành công");
+  function showMessage(message = "Thành công") {
+    setToastMessage(message);
     window.setTimeout(() => setToastMessage(""), 1800);
   }
 
@@ -84,13 +97,29 @@ export default function SubjectsManagement() {
     setIsTableEditing(false);
   }
 
-  function saveAllChanges() {
-    saveRows(draftRows);
-    setIsTableEditing(false);
-    showSuccess();
+  async function saveAllChanges() {
+    const draftByKey = new Map(draftRows.map((row) => [row.code, row]));
+    const rowsByKey = new Map(rows.map((row) => [row.code, row]));
+    const deletedRows = rows.filter((row) => !draftByKey.has(row.code));
+    const updatedRows = draftRows.filter((row) => rowsByKey.has(row.code) && rowsChanged(row, rowsByKey.get(row.code)));
+
+    try {
+      for (const row of deletedRows) {
+        await deleteRow(getDatabaseId(row));
+      }
+
+      for (const row of updatedRows) {
+        await updateRow(getDatabaseId(rowsByKey.get(row.code)), toSubjectPayload(row));
+      }
+
+      setIsTableEditing(false);
+      showMessage();
+    } catch (error) {
+      showMessage(error.message);
+    }
   }
 
-  function handleSubmit(values) {
+  async function handleSubmit(values) {
     if (modalConfig?.mode === "edit") {
       setDraftRows((currentRows) =>
         currentRows.map((row) =>
@@ -100,10 +129,13 @@ export default function SubjectsManagement() {
       return;
     }
 
-    const nextRows = [buildSubjectRow(values), ...rows];
-    saveRows(nextRows);
-    setDraftRows(nextRows);
-    showSuccess();
+    try {
+      await createRow(toSubjectPayload(buildSubjectRow(values)));
+      showMessage();
+    } catch (error) {
+      showMessage(error.message);
+      throw error;
+    }
   }
 
   return (

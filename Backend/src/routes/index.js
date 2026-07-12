@@ -4,6 +4,8 @@ const authRoutes = require("./authRoutes");
 const classRoutes = require("./classRoutes");
 const studentRoutes = require("./studentRoutes");
 const subjectRoutes = require("./subjectRoutes");
+const db = require("../config/database");
+const asyncHandler = require("../utils/asyncHandler");
 
 const router = express.Router();
 
@@ -17,14 +19,23 @@ router.get("/", (req, res) => {
   });
 });
 
-router.get("/health", (req, res) => {
+router.get("/health", asyncHandler(async (req, res) => {
+  let database = "ok";
+
+  try {
+    await db.testConnection();
+  } catch {
+    database = "error";
+  }
+
   res.json({
     data: {
       service: "student-management-api",
-      status: "ok"
+      status: "ok",
+      database
     }
   });
-});
+}));
 
 router.use("/auth", authRoutes);
 router.use("/accounts", accountRoutes);
