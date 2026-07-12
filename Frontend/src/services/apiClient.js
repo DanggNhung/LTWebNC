@@ -40,7 +40,7 @@ export async function requestJson(path, options = {}) {
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(payload?.error?.message || "KhÃ´ng thá»ƒ ghi dá»¯ liá»‡u vá»›i API");
+    throw new Error(payload?.error?.message || "Không thể ghi dữ liệu với API");
   }
 
   return payload?.data ?? payload;

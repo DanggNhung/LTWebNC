@@ -1,13 +1,15 @@
-import { useState } from "react";
 import AccountsTable from "../components/accounts/AccountsTable.jsx";
 import AddRecordModal from "../components/common/AddRecordModal.jsx";
 import Button from "../components/common/Button.jsx";
+import { EmptyRow, ErrorRow, LoadingRows } from "../components/common/LoadingRows.jsx";
 import SuccessToast from "../components/common/SuccessToast.jsx";
 import AdminPageHeader from "../components/layout/AdminPageHeader.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import AdminTopbar from "../components/layout/AdminTopbar.jsx";
 import { accountFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
+import useFacultyOptions from "../hooks/useFacultyOptions.js";
+import useTableEditor from "../hooks/useTableEditor.js";
 
 const SYSTEM_ADMIN_ACCOUNT = {
   initials: "AP",
@@ -95,29 +97,31 @@ function getAccountKey(account) {
 }
 
 export default function AccountsManagement() {
-  const { createRow, deleteRow, rows, updateRow } = useApiRows("/accounts", []);
-  const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState([]);
-  const [modalConfig, setModalConfig] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
+  const { createRow, deleteRow, rows, loading, error, updateRow } = useApiRows("/accounts", []);
+  const { departments } = useFacultyOptions();
+  const {
+    cancelEditing,
+    closeModal,
+    draftRows,
+    isTableEditing,
+    modalConfig,
+    openAddModal,
+    openEditModal,
+    setDraftRows,
+    showMessage,
+    startEditing,
+    stopEditing,
+    toastMessage
+  } = useTableEditor(rows);
 
   const normalizedRows = normalizeAccounts(rows);
   const displayedRows = isTableEditing ? draftRows : normalizedRows;
 
-  function showMessage(message = "Thành công") {
-    setToastMessage(message);
-    window.setTimeout(() => setToastMessage(""), 1800);
-  }
-
-  function startEditing() {
-    setDraftRows(normalizedRows);
-    setIsTableEditing(true);
-  }
-
-  function cancelEditing() {
-    setDraftRows(normalizedRows);
-    setIsTableEditing(false);
-  }
+  // Inject departments dynamic từ API vào form fields
+  const dynamicAccountFormFields = accountFormFields.map((field) => {
+    if (field.name === "department") return { ...field, options: departments };
+    return field;
+  });
 
   async function saveAllChanges() {
     const editableRows = normalizedRows.filter((row) => row.id !== "Admin");
@@ -136,10 +140,10 @@ export default function AccountsManagement() {
         await updateRow(getDatabaseId(rowsByKey.get(getAccountKey(row))), toAccountPayload(row));
       }
 
-      setIsTableEditing(false);
+      stopEditing();
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
+    } catch (err) {
+      showMessage(err.message);
     }
   }
 
@@ -156,9 +160,9 @@ export default function AccountsManagement() {
     try {
       await createRow(toAccountPayload(buildAccountRow(values)));
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
-      throw error;
+    } catch (err) {
+      showMessage(err.message);
+      throw err;
     }
   }
 
@@ -183,8 +187,8 @@ export default function AccountsManagement() {
             description="Quản lý tài khoản đăng nhập, mật khẩu, vai trò và trạng thái truy cập hệ thống."
             action={(
               <div className="admin-header-actions">
-                <Button icon="add" onClick={() => setModalConfig({ mode: "add", initialValues: {} })}>Thêm tài khoản</Button>
-                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? cancelEditing : startEditing}>
+                <Button icon="add" onClick={() => openAddModal()}>Thêm tài khoản</Button>
+                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? () => cancelEditing(normalizedRows) : () => startEditing(normalizedRows)}>
                   Chỉnh sửa
                 </Button>
               </div>
@@ -193,9 +197,11 @@ export default function AccountsManagement() {
           <AccountsTable
             accounts={displayedRows}
             isEditing={isTableEditing}
-            onCancelEdit={cancelEditing}
+            loading={loading}
+            error={error}
+            onCancelEdit={() => cancelEditing(normalizedRows)}
             onDelete={(account) => setDraftRows((currentRows) => normalizeAccounts(currentRows.filter((row) => getAccountKey(row) !== getAccountKey(account))))}
-            onEdit={(account) => setModalConfig({ mode: "edit", rowKey: getAccountKey(account), initialValues: getAccountInitialValues(account) })}
+            onEdit={(account) => openEditModal(getAccountKey(account), getAccountInitialValues(account))}
             onSaveAll={saveAllChanges}
             onToggleStatus={toggleAccountStatus}
           />
@@ -204,10 +210,10 @@ export default function AccountsManagement() {
       <AddRecordModal
         title={modalConfig?.mode === "edit" ? "Chỉnh sửa tài khoản" : "Thêm tài khoản"}
         description={modalConfig?.mode === "edit" ? "Cập nhật thông tin tài khoản đã chọn." : "Nhập thông tin tài khoản mới và vai trò sử dụng trong hệ thống."}
-        fields={accountFormFields}
+        fields={dynamicAccountFormFields}
         initialValues={modalConfig?.initialValues}
         isOpen={Boolean(modalConfig)}
-        onClose={() => setModalConfig(null)}
+        onClose={closeModal}
         onSubmit={handleSubmit}
         submitIcon={modalConfig?.mode === "edit" ? "save" : "add"}
         submitLabel={modalConfig?.mode === "edit" ? "Lưu" : "Thêm"}

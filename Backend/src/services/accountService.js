@@ -42,8 +42,7 @@ function toAccountDto(row, index = 0) {
     initials: getGivenNameInitial(row.fullname || row.username),
     name: row.fullname || row.username || "Chưa cập nhật",
     email: "",
-    password: row.password_plain || "",
-    hasPassword: Boolean(row.has_password),
+    hasPassword: Boolean(row.password || row.has_password),
     role,
     department: row.lecturer_faculty_name || "",
     status: toDisplayStatus(row.status),
@@ -89,6 +88,10 @@ async function createAccount(body) {
 
   if (existingUser) {
     throw httpError(409, "ID tài khoản đã tồn tại");
+  }
+
+  if (body.password && String(body.password).length < 6) {
+    throw httpError(400, "Mật khẩu phải có ít nhất 6 ký tự");
   }
 
   const password = body.password ? await bcrypt.hash(String(body.password), 10) : "";
@@ -153,6 +156,10 @@ async function updateAccount(id, body) {
     fullname: basePayload.fullname,
     status: basePayload.status
   };
+
+  if (body.password && String(body.password).length < 6) {
+    throw httpError(400, "Mật khẩu phải có ít nhất 6 ký tự");
+  }
 
   if (body.password) {
     payload.password = await bcrypt.hash(String(body.password), 10);

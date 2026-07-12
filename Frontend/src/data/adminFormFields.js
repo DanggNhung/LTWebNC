@@ -1,4 +1,8 @@
-import { departments, majorsByDepartment } from "./academicStructure.js";
+/**
+ * Định nghĩa cấu trúc form fields cho từng entity.
+ * Các trường có type "select" với options/optionMap sẽ được inject dynamic
+ * ở tầng Page (từ API) trước khi truyền vào AddRecordModal.
+ */
 
 export const studentFormFields = [
   { name: "lastName", label: "Họ", placeholder: "Nhập họ" },
@@ -21,14 +25,14 @@ export const classFormFields = [
     name: "department",
     label: "Khoa",
     type: "select",
-    options: departments
+    options: [] // Được inject dynamic từ useFacultyOptions
   },
   {
     name: "major",
     label: "Ngành",
     type: "select",
     dependsOn: "department",
-    optionMap: majorsByDepartment
+    optionMap: {} // Được inject dynamic từ useFacultyOptions
   },
   { name: "size", label: "Sĩ số", type: "number", placeholder: "Nhập sĩ số" }
 ];
@@ -36,19 +40,19 @@ export const classFormFields = [
 export const subjectFormFields = [
   { name: "subjectCode", label: "Mã môn", placeholder: "Ví dụ: CS-101" },
   { name: "subjectName", label: "Tên môn học", placeholder: "Nhập tên môn học" },
-  { name: "credits", label: "Số tín chỉ", type: "number", placeholder: "Nhập số tín chỉ" },
+  { name: "credits", label: "Số tín chỉ", type: "number", placeholder: "Từ 1 đến 10" },
   {
     name: "department",
     label: "Khoa",
     type: "select",
-    options: departments
+    options: [] // Được inject dynamic từ useFacultyOptions
   },
   {
     name: "instructor",
     label: "Giảng viên hướng dẫn",
     type: "select",
     dependsOn: "department",
-    optionMap: {}
+    optionMap: {} // Được inject dynamic từ accounts API
   },
   {
     name: "knowledgeBlock",
@@ -62,7 +66,7 @@ export const accountFormFields = [
   { name: "lastName", label: "Họ", placeholder: "Nhập họ" },
   { name: "firstName", label: "Tên", placeholder: "Nhập tên" },
   { name: "accountId", label: "ID", placeholder: "Nhập ID tài khoản" },
-  { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu" },
+  { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 6 ký tự" },
   {
     name: "role",
     label: "Vai trò",
@@ -73,7 +77,7 @@ export const accountFormFields = [
     name: "department",
     label: "Khoa",
     type: "select",
-    options: departments,
+    options: [], // Được inject dynamic từ useFacultyOptions
     showWhen: { field: "role", value: "Giảng viên" }
   }
 ];

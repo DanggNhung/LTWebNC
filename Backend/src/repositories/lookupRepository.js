@@ -62,9 +62,26 @@ async function findLecturer(value, facultyId) {
   return rows[0] || null;
 }
 
+async function findAllFaculties() {
+  const [rows] = await db.query(
+    "SELECT id, faculty_code, faculty_name FROM faculties ORDER BY faculty_name ASC"
+  );
+  return rows;
+}
+
+async function findAllMajors() {
+  const [rows] = await db.query(
+    "SELECT id, faculty_id, major_code, major_name FROM majors ORDER BY major_name ASC"
+  );
+  return rows;
+}
+
 module.exports = {
+  findAllFaculties,
+  findAllMajors,
   findClass,
   findFaculty,
   findLecturer,
   findMajor
 };
+

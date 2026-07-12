@@ -1,4 +1,3 @@
-import { useState } from "react";
 import ClassDirectory from "../components/classes/ClassDirectory.jsx";
 import AddRecordModal from "../components/common/AddRecordModal.jsx";
 import Button from "../components/common/Button.jsx";
@@ -8,6 +7,8 @@ import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import AdminTopbar from "../components/layout/AdminTopbar.jsx";
 import { classFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
+import useFacultyOptions from "../hooks/useFacultyOptions.js";
+import useTableEditor from "../hooks/useTableEditor.js";
 
 function getClassInitialValues(classItem) {
   return {
@@ -55,28 +56,31 @@ function rowsChanged(firstRow, secondRow) {
 }
 
 export default function ClassesManagement() {
-  const { createRow, deleteRow, rows, updateRow } = useApiRows("/classes", []);
-  const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState([]);
-  const [modalConfig, setModalConfig] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
+  const { createRow, deleteRow, rows, loading, error, updateRow } = useApiRows("/classes", []);
+  const { departments, majorsByDepartment } = useFacultyOptions();
+  const {
+    cancelEditing,
+    closeModal,
+    draftRows,
+    isTableEditing,
+    modalConfig,
+    openAddModal,
+    openEditModal,
+    setDraftRows,
+    showMessage,
+    startEditing,
+    stopEditing,
+    toastMessage
+  } = useTableEditor(rows);
 
   const displayedRows = isTableEditing ? draftRows : rows;
 
-  function showMessage(message = "Thành công") {
-    setToastMessage(message);
-    window.setTimeout(() => setToastMessage(""), 1800);
-  }
-
-  function startEditing() {
-    setDraftRows(rows);
-    setIsTableEditing(true);
-  }
-
-  function cancelEditing() {
-    setDraftRows(rows);
-    setIsTableEditing(false);
-  }
+  // Inject departments và majorsByDepartment dynamic từ API
+  const dynamicClassFormFields = classFormFields.map((field) => {
+    if (field.name === "department") return { ...field, options: departments };
+    if (field.name === "major") return { ...field, optionMap: majorsByDepartment };
+    return field;
+  });
 
   async function saveAllChanges() {
     const draftByKey = new Map(draftRows.map((row) => [row.id, row]));
@@ -93,10 +97,10 @@ export default function ClassesManagement() {
         await updateRow(getDatabaseId(rowsByKey.get(row.id)), toClassPayload(row));
       }
 
-      setIsTableEditing(false);
+      stopEditing();
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
+    } catch (err) {
+      showMessage(err.message);
     }
   }
 
@@ -113,9 +117,9 @@ export default function ClassesManagement() {
     try {
       await createRow(toClassPayload(buildClassRow(values)));
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
-      throw error;
+    } catch (err) {
+      showMessage(err.message);
+      throw err;
     }
   }
 
@@ -130,8 +134,8 @@ export default function ClassesManagement() {
             description="Quản lý mã lớp, tên lớp, ngành, khoa và sĩ số của từng lớp học."
             action={(
               <div className="admin-header-actions">
-                <Button icon="add" onClick={() => setModalConfig({ mode: "add", initialValues: {} })}>Thêm lớp học</Button>
-                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? cancelEditing : startEditing}>
+                <Button icon="add" onClick={() => openAddModal()}>Thêm lớp học</Button>
+                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? () => cancelEditing(rows) : () => startEditing(rows)}>
                   Chỉnh sửa
                 </Button>
               </div>
@@ -139,10 +143,14 @@ export default function ClassesManagement() {
           />
           <ClassDirectory
             classes={displayedRows}
+            departments={departments}
+            majorsByDepartment={majorsByDepartment}
             isEditing={isTableEditing}
-            onCancelEdit={cancelEditing}
+            loading={loading}
+            error={error}
+            onCancelEdit={() => cancelEditing(rows)}
             onDelete={(classItem) => setDraftRows((currentRows) => currentRows.filter((row) => row.id !== classItem.id))}
-            onEdit={(classItem) => setModalConfig({ mode: "edit", rowKey: classItem.id, initialValues: getClassInitialValues(classItem) })}
+            onEdit={(classItem) => openEditModal(classItem.id, getClassInitialValues(classItem))}
             onSaveAll={saveAllChanges}
           />
         </div>
@@ -150,10 +158,10 @@ export default function ClassesManagement() {
       <AddRecordModal
         title={modalConfig?.mode === "edit" ? "Chỉnh sửa lớp học" : "Thêm lớp học"}
         description={modalConfig?.mode === "edit" ? "Cập nhật thông tin lớp học đã chọn." : "Nhập thông tin lớp học mới để bổ sung vào danh sách quản lý."}
-        fields={classFormFields}
+        fields={dynamicClassFormFields}
         initialValues={modalConfig?.initialValues}
         isOpen={Boolean(modalConfig)}
-        onClose={() => setModalConfig(null)}
+        onClose={closeModal}
         onSubmit={handleSubmit}
         submitIcon={modalConfig?.mode === "edit" ? "save" : "add"}
         submitLabel={modalConfig?.mode === "edit" ? "Lưu" : "Thêm"}
