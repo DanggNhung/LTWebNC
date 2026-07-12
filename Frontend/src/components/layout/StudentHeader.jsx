@@ -6,8 +6,8 @@ export default function StudentHeader() {
     <UserTopbar
       profileHref="/sinh-vien/ho-so"
       user={{
-        avatar: "C",
-        name: studentProfile.name
+        avatar: studentProfile.avatar || "SV",
+        name: studentProfile.name || "Sinh viên"
       }}
     />
   );

@@ -6,14 +6,14 @@ import SuccessToast from "../components/common/SuccessToast.jsx";
 import AdminPageHeader from "../components/layout/AdminPageHeader.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import AdminTopbar from "../components/layout/AdminTopbar.jsx";
-import { accounts as fallbackAccounts } from "../data/accountsData.js";
-import { registrations as fallbackRegistrations } from "../data/adminData.js";
 import { studentFormFields } from "../data/adminFormFields.js";
-import { classes as fallbackClasses } from "../data/classesData.js";
-import useApiResource from "../hooks/useApiResource.js";
-import usePersistentAdminRows from "../hooks/usePersistentAdminRows.js";
+import useApiRows from "../hooks/useApiRows.js";
 
-function splitFullName(fullName) {
+const EMPTY_DATE_TEXT = "Chưa cập nhật";
+const EMPTY_GENDER_TEXT = "Chưa cập nhật";
+const EMPTY_CLASS_TEXT = "Chưa phân lớp";
+
+function splitFullName(fullName = "") {
   const parts = fullName.trim().split(/\s+/);
   return {
     lastName: parts.slice(0, -1).join(" "),
@@ -21,123 +21,87 @@ function splitFullName(fullName) {
   };
 }
 
-function getStudentInitialValues(student) {
-  const nameParts = splitFullName(student.name);
-  return {
-    ...nameParts,
-    studentId: student.studentId,
-    birthDate: toInputDate(student.birthDate),
-    gender: student.gender,
-    classCode: student.className
-  };
-}
-
-function toDisplayDate(value) {
-  if (!value || !value.includes("-")) return value;
-  const [year, month, day] = value.split("-");
-  return `${day}/${month}/${year}`;
-}
-
 function toInputDate(value) {
-  if (!value || !value.includes("/")) return value;
+  if (!value || !value.includes("/")) return "";
   const [day, month, year] = value.split("/");
   return `${year}-${month}-${day}`;
 }
 
+function toDisplayDate(value) {
+  if (!value || !value.includes("-")) return EMPTY_DATE_TEXT;
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function getStudentInitialValues(student) {
+  const nameParts = splitFullName(student.name);
+
+  return {
+    ...nameParts,
+    studentId: student.studentId,
+    birthDate: toInputDate(student.birthDate),
+    gender: student.gender === EMPTY_GENDER_TEXT ? "" : student.gender,
+    classCode: student.className === EMPTY_CLASS_TEXT ? "" : student.className
+  };
+}
+
 function buildStudentRow(values, existingRow = {}) {
   const studentId = values.studentId.trim();
+
   return {
     ...existingRow,
     name: `${values.lastName} ${values.firstName}`.trim(),
     email: `${studentId}@sinhvien-uni.edu.vn`,
     studentId,
     birthDate: toDisplayDate(values.birthDate),
-    gender: values.gender,
-    className: values.classCode,
+    gender: values.gender || EMPTY_GENDER_TEXT,
+    className: values.classCode || EMPTY_CLASS_TEXT,
     status: existingRow.status === "Bảo lưu" ? "Bảo lưu" : "Đang học",
     avatar: existingRow.avatar ?? "indigo"
   };
 }
 
-function readStoredRows(storageKey, fallbackRows) {
-  try {
-    const storedValue = localStorage.getItem(storageKey);
-    return storedValue ? JSON.parse(storedValue) : fallbackRows;
-  } catch {
-    return fallbackRows;
-  }
-}
+function toStudentPayload(row) {
+  const birthDate = toInputDate(row.birthDate);
+  const gender = row.gender === EMPTY_GENDER_TEXT ? null : row.gender;
+  const classCode = row.className === EMPTY_CLASS_TEXT ? null : row.className;
 
-function writeStoredRows(storageKey, rows) {
-  localStorage.setItem(storageKey, JSON.stringify(rows));
-}
-
-function syncAccountFromStudent(student) {
-  const accounts = readStoredRows("admin-accounts", fallbackAccounts);
-  const studentAccount = {
-    initials: student.name?.trim().split(/\s+/).at(-1)?.charAt(0).toUpperCase() ?? "",
-    name: student.name,
-    id: student.studentId,
-    email: student.email,
-    password: "",
-    role: "Sinh viên",
-    status: "Hoạt động",
-    lastLogin: "Chưa đăng nhập",
-    avatar: student.avatar ?? "indigo"
+  return {
+    studentId: row.studentId,
+    name: row.name,
+    birthDate: birthDate || null,
+    gender,
+    classCode,
+    status: row.status
   };
-  const hasExistingAccount = accounts.some(
-    (account) => account.role === "Sinh viên" && account.id === student.studentId
-  );
-  const nextAccounts = hasExistingAccount
-    ? accounts.map((account) =>
-        account.role === "Sinh viên" && account.id === student.studentId
-          ? { ...account, name: student.name, email: student.email, initials: studentAccount.initials }
-          : account
-      )
-    : [studentAccount, ...accounts];
-
-  writeStoredRows("admin-accounts", nextAccounts);
 }
 
-function mergeStudentAccounts(students) {
-  const accounts = readStoredRows("admin-accounts", fallbackAccounts);
-  const studentAccounts = accounts.filter((account) => account.role === "Sinh viên");
+function getDatabaseId(row) {
+  const databaseId = row.databaseId ?? row.id;
 
-  return studentAccounts.reduce((currentStudents, account) => {
-    const studentRow = {
-      name: account.name,
-      email: account.email,
-      studentId: account.id,
-      birthDate: "",
-      gender: "",
-      className: "",
-      status: "Đang học",
-      avatar: account.avatar ?? "indigo"
-    };
+  if (!databaseId) {
+    throw new Error("Dữ liệu sinh viên chưa có databaseId. Hãy tải dữ liệu từ MySQL trước khi chỉnh sửa.");
+  }
 
-    return currentStudents.some((student) => student.studentId === account.id)
-      ? currentStudents.map((student) =>
-          student.studentId === account.id
-            ? { ...student, name: account.name, email: account.email }
-            : student
-        )
-      : [studentRow, ...currentStudents];
-  }, students);
+  return databaseId;
+}
+
+function rowsChanged(firstRow, secondRow) {
+  return JSON.stringify(toStudentPayload(firstRow)) !== JSON.stringify(toStudentPayload(secondRow));
 }
 
 export default function AdminDashboard() {
-  const { data: sourceRegistrations } = useApiResource("/students", fallbackRegistrations);
-  const { rows, saveRows } = usePersistentAdminRows("admin-students", sourceRegistrations);
+  const { createRow, deleteRow, rows, updateRow } = useApiRows("/students", []);
+  const { rows: classRows } = useApiRows("/classes", []);
   const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState(rows);
+  const [draftRows, setDraftRows] = useState([]);
   const [modalConfig, setModalConfig] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
 
-  const syncedRows = mergeStudentAccounts(rows);
-  const displayedRows = isTableEditing ? draftRows : syncedRows;
-  const classOptions = readStoredRows("admin-classes", fallbackClasses).map((classRow) => classRow.id);
+  const displayedRows = isTableEditing ? draftRows : rows;
+  const classOptions = classRows.map((classRow) => classRow.id);
   const dynamicStudentFormFields = studentFormFields.map((field) => {
-    if (field.name === "studentId" && modalConfig?.mode === "edit") {
+    if (["lastName", "firstName", "studentId"].includes(field.name) && modalConfig?.mode === "edit") {
       return { ...field, readOnly: true };
     }
 
@@ -152,28 +116,44 @@ export default function AdminDashboard() {
     return field;
   });
 
-  function showSuccess() {
-    setToastMessage("Thành công");
+  function showMessage(message = "Thành công") {
+    setToastMessage(message);
     window.setTimeout(() => setToastMessage(""), 1800);
   }
 
   function startEditing() {
-    setDraftRows(syncedRows);
+    setDraftRows(rows);
     setIsTableEditing(true);
   }
 
   function cancelEditing() {
-    setDraftRows(syncedRows);
+    setDraftRows(rows);
     setIsTableEditing(false);
   }
 
-  function saveAllChanges() {
-    saveRows(draftRows);
-    setIsTableEditing(false);
-    showSuccess();
+  async function saveAllChanges() {
+    const draftByKey = new Map(draftRows.map((row) => [row.studentId, row]));
+    const rowsByKey = new Map(rows.map((row) => [row.studentId, row]));
+    const deletedRows = rows.filter((row) => !draftByKey.has(row.studentId));
+    const updatedRows = draftRows.filter((row) => rowsByKey.has(row.studentId) && rowsChanged(row, rowsByKey.get(row.studentId)));
+
+    try {
+      for (const row of deletedRows) {
+        await deleteRow(getDatabaseId(row));
+      }
+
+      for (const row of updatedRows) {
+        await updateRow(getDatabaseId(rowsByKey.get(row.studentId)), toStudentPayload(row));
+      }
+
+      setIsTableEditing(false);
+      showMessage();
+    } catch (error) {
+      showMessage(error.message);
+    }
   }
 
-  function handleSubmit(values) {
+  async function handleSubmit(values) {
     if (modalConfig?.mode === "edit") {
       setDraftRows((currentRows) =>
         currentRows.map((row) =>
@@ -183,12 +163,13 @@ export default function AdminDashboard() {
       return;
     }
 
-    const newStudent = buildStudentRow(values);
-    const nextRows = [newStudent, ...syncedRows];
-    saveRows(nextRows);
-    setDraftRows(nextRows);
-    syncAccountFromStudent(newStudent);
-    showSuccess();
+    try {
+      await createRow(toStudentPayload(buildStudentRow(values)));
+      showMessage();
+    } catch (error) {
+      showMessage(error.message);
+      throw error;
+    }
   }
 
   function toggleStudentStatus(student) {

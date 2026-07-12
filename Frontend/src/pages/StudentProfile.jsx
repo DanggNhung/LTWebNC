@@ -1,17 +1,7 @@
 import Button from "../components/common/Button.jsx";
 import StudentHeader from "../components/layout/StudentHeader.jsx";
-import { registrations as fallbackStudents } from "../data/adminData.js";
-import { classes as fallbackClasses } from "../data/classesData.js";
 import { studentProfile } from "../data/studentData.js";
-
-function readStoredRows(storageKey, fallbackRows) {
-  try {
-    const storedValue = localStorage.getItem(storageKey);
-    return storedValue ? JSON.parse(storedValue) : fallbackRows;
-  } catch {
-    return fallbackRows;
-  }
-}
+import useApiResource from "../hooks/useApiResource.js";
 
 function findCurrentStudent(students) {
   return (
@@ -21,7 +11,7 @@ function findCurrentStudent(students) {
   );
 }
 
-function getProfileRows(student, classInfo) {
+function getProfileRows(student) {
   return [
     { label: "Họ và tên", value: student?.name },
     { label: "Mã sinh viên", value: student?.studentId },
@@ -29,18 +19,16 @@ function getProfileRows(student, classInfo) {
     { label: "Giới tính", value: student?.gender },
     { label: "Lớp", value: student?.className },
     { label: "Trạng thái", value: student?.status },
-    { label: "Ngành", value: classInfo?.major },
-    { label: "Khoa", value: classInfo?.faculty },
-    { label: "Giảng viên hướng dẫn", value: classInfo?.instructor }
+    { label: "Ngành", value: student?.major },
+    { label: "Khoa", value: student?.faculty },
+    { label: "Giảng viên hướng dẫn", value: student?.advisor }
   ];
 }
 
 export default function StudentProfile() {
-  const students = readStoredRows("admin-students", fallbackStudents);
-  const classes = readStoredRows("admin-classes", fallbackClasses);
+  const { data: students } = useApiResource("/students", []);
   const student = findCurrentStudent(students);
-  const classInfo = classes.find((item) => item.id === student?.className);
-  const profileRows = getProfileRows(student, classInfo);
+  const profileRows = getProfileRows(student);
 
   return (
     <div className="student-page">

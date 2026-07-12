@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import StudentProfile from "./pages/StudentProfile.jsx";
 import StudentResults from "./pages/StudentResults.jsx";
 import SubjectsManagement from "./pages/SubjectsManagement.jsx";
+import { getJson } from "./services/apiClient.js";
 
 const routes = {
   admin: AdminDashboard,
@@ -18,6 +19,8 @@ const routes = {
   "giang-vien": FacultyDashboard
 };
 
+const adminRoutes = new Set(["admin", "admin/tai-khoan", "admin/lop-hoc", "admin/mon-hoc"]);
+
 function getCurrentRoute() {
   const route = window.location.pathname.replace(/^\/+|\/+$/g, "");
   return routes[route] ? route : "home";
@@ -25,6 +28,7 @@ function getCurrentRoute() {
 
 export default function App() {
   const [route, setRoute] = useState(getCurrentRoute);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(() => adminRoutes.has(getCurrentRoute()));
   const Page = routes[route] || LoginPage;
 
   useEffect(() => {
@@ -34,6 +38,43 @@ export default function App() {
       window.removeEventListener("popstate", onPopState);
     };
   }, []);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    if (!adminRoutes.has(route)) {
+      setIsCheckingAccess(false);
+      return () => {
+        isCurrent = false;
+      };
+    }
+
+    setIsCheckingAccess(true);
+    getJson("/auth/me")
+      .then((user) => {
+        if (!isCurrent) return;
+
+        if (user?.role !== "Quản trị viên") {
+          window.location.replace("/");
+          return;
+        }
+
+        setIsCheckingAccess(false);
+      })
+      .catch(() => {
+        if (isCurrent) {
+          window.location.replace("/");
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [route]);
+
+  if (adminRoutes.has(route) && isCheckingAccess) {
+    return null;
+  }
 
   return <Page />;
 }

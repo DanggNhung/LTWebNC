@@ -53,9 +53,9 @@ export default function AddRecordModal({
     });
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    onSubmit?.(formValues);
+    await onSubmit?.(formValues);
     onClose();
   }
 
