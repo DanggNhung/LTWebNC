@@ -14,6 +14,7 @@ export default function ClassDirectory({ classes, departments = [], majorsByDepa
       ),
     [classes, filters]
   );
+  const displayedClasses = filteredClasses.slice(0, 15);
 
   return (
     <section className="panel class-directory">
@@ -69,7 +70,7 @@ export default function ClassDirectory({ classes, departments = [], majorsByDepa
             ) : filteredClasses.length === 0 ? (
               <EmptyRow cols={isEditing ? 6 : 5} />
             ) : (
-              filteredClasses.map((item) => (
+              displayedClasses.map((item) => (
                 <tr key={item.id}>
                   <td className="mono">{item.id}</td>
                   <td><strong>{item.name}</strong></td>

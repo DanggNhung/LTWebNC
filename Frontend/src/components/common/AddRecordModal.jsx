@@ -111,10 +111,11 @@ export default function AddRecordModal({
                     value={formValues[field.name] ?? ""}
                     onChange={(event) => handleFieldChange(field.name, event.target.value)}
                     placeholder={field.placeholder}
-                    min={field.type === "number" ? "0" : undefined}
+                    min={field.type === "number" ? field.min ?? "0" : undefined}
+                    max={field.type === "number" ? field.max : undefined}
                     readOnly={Boolean(field.readOnly)}
                     disabled={Boolean(field.disabled)}
-                    required
+                    required={field.required !== false}
                   />
                 )}
               </label>

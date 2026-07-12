@@ -1,10 +1,11 @@
 import Icon from "../common/Icon.jsx";
-import { requestJson } from "../../services/apiClient.js";
+import { clearDemoSessionId, requestJson } from "../../services/apiClient.js";
 
 export default function UserTopbar({ profileHref, showProfileLink = true, user }) {
   async function handleLogout(event) {
     event.preventDefault();
     await requestJson("/auth/logout", { method: "POST" }).catch(() => null);
+    clearDemoSessionId();
     window.location.href = "/";
   }
 

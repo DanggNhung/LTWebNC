@@ -9,6 +9,7 @@ import { subjectFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
 import useFacultyOptions from "../hooks/useFacultyOptions.js";
 import useTableEditor from "../hooks/useTableEditor.js";
+import { getDatabaseId, saveDraftChanges } from "../utils/adminCrud.js";
 
 function getSubjectInitialValues(subject) {
   return {
@@ -42,20 +43,6 @@ function toSubjectPayload(row) {
     instructor: row.instructor === "Chưa phân công" ? "" : row.instructor,
     knowledgeBlock: row.knowledgeBlock
   };
-}
-
-function getDatabaseId(row) {
-  const databaseId = row.databaseId ?? row.id;
-
-  if (!databaseId) {
-    throw new Error("Dữ liệu môn học chưa có databaseId. Hãy tải dữ liệu từ MySQL trước khi chỉnh sửa.");
-  }
-
-  return databaseId;
-}
-
-function rowsChanged(firstRow, secondRow) {
-  return JSON.stringify(toSubjectPayload(firstRow)) !== JSON.stringify(toSubjectPayload(secondRow));
 }
 
 function getInstructorOptionMap(accounts) {
@@ -93,26 +80,23 @@ export default function SubjectsManagement() {
 
   // Inject departments dynamic từ API, instructorOptionMap từ accounts
   const dynamicSubjectFormFields = subjectFormFields.map((field) => {
+    if (field.name === "subjectCode" && modalConfig?.mode === "edit") return { ...field, readOnly: true };
     if (field.name === "department") return { ...field, options: departments };
     if (field.name === "instructor") return { ...field, optionMap: instructorOptionMap };
     return field;
   });
 
   async function saveAllChanges() {
-    const draftByKey = new Map(draftRows.map((row) => [row.code, row]));
-    const rowsByKey = new Map(rows.map((row) => [row.code, row]));
-    const deletedRows = rows.filter((row) => !draftByKey.has(row.code));
-    const updatedRows = draftRows.filter((row) => rowsByKey.has(row.code) && rowsChanged(row, rowsByKey.get(row.code)));
-
     try {
-      for (const row of deletedRows) {
-        await deleteRow(getDatabaseId(row));
-      }
-
-      for (const row of updatedRows) {
-        await updateRow(getDatabaseId(rowsByKey.get(row.code)), toSubjectPayload(row));
-      }
-
+      await saveDraftChanges({
+        rows,
+        draftRows,
+        getKey: (row) => row.code,
+        toPayload: toSubjectPayload,
+        deleteRow,
+        updateRow,
+        getId: (row) => getDatabaseId(row, "Dữ liệu môn học")
+      });
       stopEditing();
       showMessage();
     } catch (err) {

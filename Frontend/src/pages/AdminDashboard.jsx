@@ -8,30 +8,15 @@ import AdminTopbar from "../components/layout/AdminTopbar.jsx";
 import { studentFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
 import useTableEditor from "../hooks/useTableEditor.js";
-
-const EMPTY_DATE_TEXT = "Chưa cập nhật";
-const EMPTY_GENDER_TEXT = "Chưa cập nhật";
-const EMPTY_CLASS_TEXT = "Chưa phân lớp";
-
-function splitFullName(fullName = "") {
-  const parts = fullName.trim().split(/\s+/);
-  return {
-    lastName: parts.slice(0, -1).join(" "),
-    firstName: parts.at(-1) ?? ""
-  };
-}
-
-function toInputDate(value) {
-  if (!value || !value.includes("/")) return "";
-  const [day, month, year] = value.split("/");
-  return `${year}-${month}-${day}`;
-}
-
-function toDisplayDate(value) {
-  if (!value || !value.includes("-")) return EMPTY_DATE_TEXT;
-  const [year, month, day] = value.split("-");
-  return `${day}/${month}/${year}`;
-}
+import {
+  EMPTY_CLASS_TEXT,
+  EMPTY_GENDER_TEXT,
+  getDatabaseId,
+  saveDraftChanges,
+  splitFullName,
+  toDisplayDate,
+  toInputDate
+} from "../utils/adminCrud.js";
 
 function getStudentInitialValues(student) {
   const nameParts = splitFullName(student.name);
@@ -76,20 +61,6 @@ function toStudentPayload(row) {
   };
 }
 
-function getDatabaseId(row) {
-  const databaseId = row.databaseId ?? row.id;
-
-  if (!databaseId) {
-    throw new Error("Dữ liệu sinh viên chưa có databaseId. Hãy tải dữ liệu từ MySQL trước khi chỉnh sửa.");
-  }
-
-  return databaseId;
-}
-
-function rowsChanged(firstRow, secondRow) {
-  return JSON.stringify(toStudentPayload(firstRow)) !== JSON.stringify(toStudentPayload(secondRow));
-}
-
 export default function AdminDashboard() {
   const { createRow, deleteRow, rows, loading, error, updateRow } = useApiRows("/students", []);
   const { rows: classRows } = useApiRows("/classes", []);
@@ -127,20 +98,16 @@ export default function AdminDashboard() {
   });
 
   async function saveAllChanges() {
-    const draftByKey = new Map(draftRows.map((row) => [row.studentId, row]));
-    const rowsByKey = new Map(rows.map((row) => [row.studentId, row]));
-    const deletedRows = rows.filter((row) => !draftByKey.has(row.studentId));
-    const updatedRows = draftRows.filter((row) => rowsByKey.has(row.studentId) && rowsChanged(row, rowsByKey.get(row.studentId)));
-
     try {
-      for (const row of deletedRows) {
-        await deleteRow(getDatabaseId(row));
-      }
-
-      for (const row of updatedRows) {
-        await updateRow(getDatabaseId(rowsByKey.get(row.studentId)), toStudentPayload(row));
-      }
-
+      await saveDraftChanges({
+        rows,
+        draftRows,
+        getKey: (row) => row.studentId,
+        toPayload: toStudentPayload,
+        deleteRow,
+        updateRow,
+        getId: (row) => getDatabaseId(row, "Dữ liệu sinh viên")
+      });
       stopEditing();
       showMessage();
     } catch (err) {

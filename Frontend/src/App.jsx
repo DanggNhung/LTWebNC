@@ -21,6 +21,13 @@ const routes = {
 
 const adminRoutes = new Set(["admin", "admin/tai-khoan", "admin/lop-hoc", "admin/mon-hoc"]);
 
+function getRequiredRole(route) {
+  if (adminRoutes.has(route)) return "Quản trị viên";
+  if (route === "giang-vien") return "Giảng viên";
+  if (route === "sinh-vien" || route === "sinh-vien/ho-so") return "Sinh viên";
+  return null;
+}
+
 function getCurrentRoute() {
   const route = window.location.pathname.replace(/^\/+|\/+$/g, "");
   return routes[route] ? route : "home";
@@ -28,7 +35,7 @@ function getCurrentRoute() {
 
 export default function App() {
   const [route, setRoute] = useState(getCurrentRoute);
-  const [isCheckingAccess, setIsCheckingAccess] = useState(() => adminRoutes.has(getCurrentRoute()));
+  const [isCheckingAccess, setIsCheckingAccess] = useState(() => Boolean(getRequiredRole(getCurrentRoute())));
   const Page = routes[route] || LoginPage;
 
   useEffect(() => {
@@ -42,7 +49,9 @@ export default function App() {
   useEffect(() => {
     let isCurrent = true;
 
-    if (!adminRoutes.has(route)) {
+    const requiredRole = getRequiredRole(route);
+
+    if (!requiredRole) {
       setIsCheckingAccess(false);
       return () => {
         isCurrent = false;
@@ -54,7 +63,7 @@ export default function App() {
       .then((user) => {
         if (!isCurrent) return;
 
-        if (user?.role !== "Quản trị viên") {
+        if (user?.role !== requiredRole) {
           window.location.replace("/");
           return;
         }
@@ -72,7 +81,7 @@ export default function App() {
     };
   }, [route]);
 
-  if (adminRoutes.has(route) && isCheckingAccess) {
+  if (getRequiredRole(route) && isCheckingAccess) {
     return null;
   }
 

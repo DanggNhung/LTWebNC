@@ -16,13 +16,16 @@ export function toGpa(score10) {
 export function summarizeGrades(semesters) {
   const rows = semesters.flatMap((semester) => semester.rows);
   const totalCredits = rows.reduce((sum, row) => sum + row.credits, 0);
+  const completedRows = rows.filter((row) => row.score10 !== null && row.score10 !== undefined && row.score10 !== "");
   const accumulatedCredits = rows
     .filter((row) => row.score10 >= 4)
     .reduce((sum, row) => sum + row.credits, 0);
 
-  if (totalCredits === 0) {
+  const completedCredits = completedRows.reduce((sum, row) => sum + row.credits, 0);
+
+  if (completedCredits === 0) {
     return {
-      totalCredits: 0,
+      totalCredits,
       accumulatedCredits: 0,
       average10: 0,
       average4: 0,
@@ -30,8 +33,8 @@ export function summarizeGrades(semesters) {
     };
   }
 
-  const weighted10 = rows.reduce((sum, row) => sum + row.score10 * row.credits, 0) / totalCredits;
-  const weighted4 = rows.reduce((sum, row) => sum + toGpa(row.score10).score4 * row.credits, 0) / totalCredits;
+  const weighted10 = completedRows.reduce((sum, row) => sum + row.score10 * row.credits, 0) / completedCredits;
+  const weighted4 = completedRows.reduce((sum, row) => sum + toGpa(row.score10).score4 * row.credits, 0) / completedCredits;
 
   return {
     totalCredits,

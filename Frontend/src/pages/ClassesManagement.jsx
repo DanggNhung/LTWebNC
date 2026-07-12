@@ -9,14 +9,14 @@ import { classFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
 import useFacultyOptions from "../hooks/useFacultyOptions.js";
 import useTableEditor from "../hooks/useTableEditor.js";
+import { getDatabaseId, saveDraftChanges } from "../utils/adminCrud.js";
 
 function getClassInitialValues(classItem) {
   return {
     classCode: classItem.id,
     className: classItem.name,
     major: classItem.major,
-    department: classItem.faculty,
-    size: classItem.students
+    department: classItem.faculty
   };
 }
 
@@ -27,7 +27,7 @@ function buildClassRow(values, existingRow = {}) {
     name: values.className,
     major: values.major,
     faculty: values.department,
-    students: Number(values.size)
+    students: existingRow.students ?? 0
   };
 }
 
@@ -39,20 +39,6 @@ function toClassPayload(row) {
     faculty: row.faculty,
     course: null
   };
-}
-
-function getDatabaseId(row) {
-  const databaseId = row.databaseId ?? (Number.isInteger(Number(row.id)) ? row.id : null);
-
-  if (!databaseId) {
-    throw new Error("Dữ liệu lớp học chưa có databaseId. Hãy tải dữ liệu từ MySQL trước khi chỉnh sửa.");
-  }
-
-  return databaseId;
-}
-
-function rowsChanged(firstRow, secondRow) {
-  return JSON.stringify(toClassPayload(firstRow)) !== JSON.stringify(toClassPayload(secondRow));
 }
 
 export default function ClassesManagement() {
@@ -77,26 +63,23 @@ export default function ClassesManagement() {
 
   // Inject departments và majorsByDepartment dynamic từ API
   const dynamicClassFormFields = classFormFields.map((field) => {
+    if (field.name === "classCode" && modalConfig?.mode === "edit") return { ...field, readOnly: true };
     if (field.name === "department") return { ...field, options: departments };
     if (field.name === "major") return { ...field, optionMap: majorsByDepartment };
     return field;
   });
 
   async function saveAllChanges() {
-    const draftByKey = new Map(draftRows.map((row) => [row.id, row]));
-    const rowsByKey = new Map(rows.map((row) => [row.id, row]));
-    const deletedRows = rows.filter((row) => !draftByKey.has(row.id));
-    const updatedRows = draftRows.filter((row) => rowsByKey.has(row.id) && rowsChanged(row, rowsByKey.get(row.id)));
-
     try {
-      for (const row of deletedRows) {
-        await deleteRow(getDatabaseId(row));
-      }
-
-      for (const row of updatedRows) {
-        await updateRow(getDatabaseId(rowsByKey.get(row.id)), toClassPayload(row));
-      }
-
+      await saveDraftChanges({
+        rows,
+        draftRows,
+        getKey: (row) => row.id,
+        toPayload: toClassPayload,
+        deleteRow,
+        updateRow,
+        getId: (row) => getDatabaseId(row, "Dữ liệu lớp học")
+      });
       stopEditing();
       showMessage();
     } catch (err) {

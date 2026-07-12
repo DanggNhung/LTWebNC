@@ -14,7 +14,7 @@ export const majorsByDepartment = {
 
 export const departmentAbbreviations = {
   "Công nghệ thông tin": "CNTT",
-  "Điện - Điện tử": "DDN",
+  "Điện - Điện tử": "DDT",
   "Kinh tế - Kinh doanh": "KTKD",
   "Ngôn ngữ": "NN"
 };

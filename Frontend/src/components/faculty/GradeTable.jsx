@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { requestJson } from "../../services/apiClient.js";
 import Button from "../common/Button.jsx";
 import StatusBadge from "../common/StatusBadge.jsx";
 
@@ -21,16 +22,61 @@ function toGpa(scale10) {
   return { scale4: 0.0, letter: "F" };
 }
 
-export default function GradeTable({ rows }) {
+export default function GradeTable({
+  onSaved,
+  onSubjectChange,
+  rows,
+  selectedSubjectId = "",
+  subjects = []
+}) {
   const [editing, setEditing] = useState(false);
+  const [draftRows, setDraftRows] = useState([]);
+  const displayedRows = editing ? draftRows : rows;
+
+  function startEditing() {
+    setDraftRows(rows);
+    setEditing(true);
+  }
+
+  function updateDraft(enrollmentId, field, value) {
+    setDraftRows((currentRows) =>
+      currentRows.map((row) => (
+        row.enrollmentId === enrollmentId ? { ...row, [field]: value } : row
+      ))
+    );
+  }
+
+  async function finishEditing() {
+    for (const row of draftRows) {
+      if (row.attendance === "" || row.midterm === "" || row.final === "") continue;
+
+      await requestJson(`/portal/teacher/scores/${row.enrollmentId}`, {
+        method: "PUT",
+        body: {
+          attendance: row.attendance,
+          midterm: row.midterm,
+          final: row.final
+        }
+      });
+    }
+
+    setEditing(false);
+    await onSaved?.();
+  }
 
   return (
     <section className="panel grade-panel">
       <div className="panel-header">
-        <div>
+        <div className="grade-panel-title">
           <h2>Nhập điểm</h2>
+          <select value={selectedSubjectId} onChange={(event) => onSubjectChange?.(event.target.value)}>
+            <option value="">Chọn môn</option>
+            {subjects.map((subject) => (
+              <option key={subject.id} value={subject.id}>{subject.name}</option>
+            ))}
+          </select>
         </div>
-        <Button icon={editing ? "check" : "edit"} onClick={() => setEditing((value) => !value)}>
+        <Button icon={editing ? "check" : "edit"} onClick={editing ? finishEditing : startEditing}>
           {editing ? "Hoàn tất" : "Chỉnh sửa"}
         </Button>
       </div>
@@ -50,21 +96,22 @@ export default function GradeTable({ rows }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
-              const scale10 = calculateScale10(row);
-              const { scale4, letter } = toGpa(scale10);
-              const status = scale10 >= 4 ? "Đạt" : "Học lại";
+            {displayedRows.map((row) => {
+              const hasAllScores = row.attendance !== "" && row.midterm !== "" && row.final !== "";
+              const scale10 = hasAllScores ? calculateScale10(row) : null;
+              const { scale4, letter } = hasAllScores ? toGpa(scale10) : { scale4: "", letter: "" };
+              const status = hasAllScores ? (scale10 >= 4 ? "Đạt" : "Học lại") : "Chưa đủ điểm";
 
               return (
-                <tr key={row.id}>
+                <tr key={row.enrollmentId || row.id}>
                   <td><strong>{row.name}</strong></td>
                   <td className="mono">{row.id}</td>
-                  <td className="center-column">{editing ? <input defaultValue={roundOne(row.attendance)} /> : roundOne(row.attendance)}</td>
-                  <td className="center-column">{editing ? <input defaultValue={roundOne(row.midterm)} /> : roundOne(row.midterm)}</td>
-                  <td className="center-column">{editing ? <input defaultValue={roundOne(row.final)} /> : roundOne(row.final)}</td>
-                  <td className="center-column">{roundOne(scale10)}</td>
-                  <td className="center-column">{roundOne(scale4)}</td>
-                  <td className="mono center-column">{letter}</td>
+                  <td className="center-column">{editing ? <input value={row.attendance} onChange={(event) => updateDraft(row.enrollmentId, "attendance", event.target.value)} /> : (row.attendance === "" ? "-" : roundOne(row.attendance))}</td>
+                  <td className="center-column">{editing ? <input value={row.midterm} onChange={(event) => updateDraft(row.enrollmentId, "midterm", event.target.value)} /> : (row.midterm === "" ? "-" : roundOne(row.midterm))}</td>
+                  <td className="center-column">{editing ? <input value={row.final} onChange={(event) => updateDraft(row.enrollmentId, "final", event.target.value)} /> : (row.final === "" ? "-" : roundOne(row.final))}</td>
+                  <td className="center-column">{hasAllScores ? roundOne(scale10) : "-"}</td>
+                  <td className="center-column">{hasAllScores ? roundOne(scale4) : "-"}</td>
+                  <td className="mono center-column">{letter || "-"}</td>
                   <td className="center-column"><StatusBadge status={status} /></td>
                 </tr>
               );

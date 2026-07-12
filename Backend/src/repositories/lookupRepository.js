@@ -62,6 +62,18 @@ async function findLecturer(value, facultyId) {
   return rows[0] || null;
 }
 
+async function findKnowledgeBlock(value) {
+  if (!value) return null;
+
+  const isNumericId = Number.isInteger(Number(value));
+  const sql = isNumericId
+    ? "SELECT * FROM knowledge_blocks WHERE id = ? OR block_code = ? OR block_name = ? LIMIT 1"
+    : "SELECT * FROM knowledge_blocks WHERE block_code = ? OR block_name = ? LIMIT 1";
+  const params = isNumericId ? [value, value, value] : [value, value];
+  const [rows] = await db.query(sql, params);
+  return rows[0] || null;
+}
+
 async function findAllFaculties() {
   const [rows] = await db.query(
     "SELECT id, faculty_code, faculty_name FROM faculties ORDER BY faculty_name ASC"
@@ -81,7 +93,7 @@ module.exports = {
   findAllMajors,
   findClass,
   findFaculty,
+  findKnowledgeBlock,
   findLecturer,
   findMajor
 };
-

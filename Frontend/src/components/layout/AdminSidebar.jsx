@@ -1,11 +1,12 @@
 import { adminNavItems } from "../../data/navigation.js";
-import { requestJson } from "../../services/apiClient.js";
+import { clearDemoSessionId, requestJson } from "../../services/apiClient.js";
 import Icon from "../common/Icon.jsx";
 
 export default function AdminSidebar({ activeLabel = "Sinh viên" }) {
   async function handleLogout(event) {
     event.preventDefault();
     await requestJson("/auth/logout", { method: "POST" }).catch(() => null);
+    clearDemoSessionId();
     window.location.href = "/";
   }
 

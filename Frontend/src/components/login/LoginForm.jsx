@@ -1,10 +1,32 @@
 import { useState } from "react";
-import { requestJson } from "../../services/apiClient.js";
+import { requestJson, resetDemoSessionId } from "../../services/apiClient.js";
 import Button from "../common/Button.jsx";
 import Icon from "../common/Icon.jsx";
 
+const REMEMBERED_LOGIN_KEY = "student-management-remembered-logins";
+
 function getSelectedRole(role) {
   return role === "faculty" ? "Giảng viên" : "Sinh viên";
+}
+
+function getRememberedLogins() {
+  try {
+    return JSON.parse(window.localStorage.getItem(REMEMBERED_LOGIN_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveRememberedLogin(loginId, password) {
+  const rememberedLogins = getRememberedLogins();
+  rememberedLogins[loginId] = password;
+  window.localStorage.setItem(REMEMBERED_LOGIN_KEY, JSON.stringify(rememberedLogins));
+}
+
+function removeRememberedLogin(loginId) {
+  const rememberedLogins = getRememberedLogins();
+  delete rememberedLogins[loginId];
+  window.localStorage.setItem(REMEMBERED_LOGIN_KEY, JSON.stringify(rememberedLogins));
 }
 
 export default function LoginForm() {
@@ -12,22 +34,43 @@ export default function LoginForm() {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [rememberLogin, setRememberLogin] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  function handleLoginIdChange(event) {
+    const nextLoginId = event.target.value;
+    const trimmedLoginId = nextLoginId.trim();
+    const rememberedPassword = getRememberedLogins()[trimmedLoginId];
+
+    setLoginId(nextLoginId);
+    if (rememberedPassword !== undefined) {
+      setPassword(rememberedPassword);
+      setRememberLogin(true);
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setSubmitting(true);
     setError("");
+    resetDemoSessionId();
 
     try {
+      const trimmedLoginId = loginId.trim();
       const user = await requestJson("/auth/login", {
         method: "POST",
         body: {
-          username: loginId.trim(),
+          username: trimmedLoginId,
           password
         }
       });
+
+      if (rememberLogin) {
+        saveRememberedLogin(trimmedLoginId, password);
+      } else {
+        removeRememberedLogin(trimmedLoginId);
+      }
 
       if (user.role === "Quản trị viên") {
         window.location.href = "/admin";
@@ -65,7 +108,7 @@ export default function LoginForm() {
           <input
             placeholder={role === "student" ? "Nhập mã sinh viên" : "Nhập mã giảng viên"}
             value={loginId}
-            onChange={(event) => setLoginId(event.target.value)}
+            onChange={handleLoginIdChange}
             required
           />
         </label>
@@ -86,6 +129,14 @@ export default function LoginForm() {
           >
             <Icon name={isPasswordVisible ? "visibility_off" : "visibility"} />
           </button>
+        </label>
+        <label className="remember-login">
+          <input
+            type="checkbox"
+            checked={rememberLogin}
+            onChange={(event) => setRememberLogin(event.target.checked)}
+          />
+          <span>Ghi nhớ đăng nhập</span>
         </label>
         {error && <p className="login-error">{error}</p>}
         <Button className="full-width" icon="arrow_forward" type="submit">

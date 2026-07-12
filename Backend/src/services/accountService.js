@@ -4,26 +4,15 @@ const lookupRepository = require("../repositories/lookupRepository");
 const { avatarColor, getGivenNameInitial, normalizeRole } = require("../utils/formatters");
 const httpError = require("../utils/httpError");
 const { buildInsert } = require("../utils/sql");
-
-function toDatabaseRole(role = "") {
-  const normalized = normalizeRole(role);
-
-  if (normalized === "Quản trị viên") return "admin";
-  if (normalized === "Giảng viên") return "teacher";
-  return "student";
-}
-
-function toDatabaseStatus(status = "") {
-  return status === "locked" || status === "Tạm khóa" ? "locked" : "active";
-}
-
-function toDisplayStatus(status = "") {
-  return status === "locked" ? "Tạm khóa" : "Hoạt động";
-}
-
-function formatTeacherNumber(value) {
-  return String(value).padStart(3, "0");
-}
+const {
+  assertUsernameMatchesRole,
+  formatTeacherNumber,
+  inferAdmissionYear,
+  normalizeUsernameForRole,
+  toDatabaseRole,
+  toDatabaseStatus,
+  toDisplayStatus
+} = require("./accountHelpers");
 
 function toAccountDto(row, index = 0) {
   const role = normalizeRole(row.role);
@@ -42,6 +31,7 @@ function toAccountDto(row, index = 0) {
     initials: getGivenNameInitial(row.fullname || row.username),
     name: row.fullname || row.username || "Chưa cập nhật",
     email: "",
+    passwordDisplay: row.password_plain || "",
     hasPassword: Boolean(row.password || row.has_password),
     role,
     department: row.lecturer_faculty_name || "",
@@ -52,9 +42,9 @@ function toAccountDto(row, index = 0) {
 }
 
 function buildAccountBase(body) {
-  const username = String(body.accountId || body.username || body.id || "").trim();
   const fullname = String(body.name || body.fullname || `${body.lastName || ""} ${body.firstName || ""}`).trim();
   const role = toDatabaseRole(body.role);
+  const username = normalizeUsernameForRole(String(body.accountId || body.username || body.id || "").trim(), role);
 
   if (!username) {
     throw httpError(400, "Thiếu ID tài khoản");
@@ -63,6 +53,8 @@ function buildAccountBase(body) {
   if (!fullname) {
     throw httpError(400, "Thiếu họ tên tài khoản");
   }
+
+  assertUsernameMatchesRole(username, role);
 
   return {
     username,
@@ -151,9 +143,29 @@ async function updateAccount(id, body) {
     throw httpError(400, "Không được chỉnh sửa tài khoản quản trị hệ thống");
   }
 
-  const basePayload = buildAccountBase({ ...body, accountId: currentUser.username });
+  const basePayload = buildAccountBase(body);
+  const isRoleChanged = currentUser.role !== basePayload.role;
+  const isUsernameChanged = currentUser.username !== basePayload.username;
+
+  if (isRoleChanged && !isUsernameChanged) {
+    throw httpError(400, "Muốn đổi vai trò thì phải đổi ID phù hợp với vai trò mới trước");
+  }
+
+  if (isUsernameChanged) {
+    const existingUser = await accountRepository.findByUsername(basePayload.username);
+    if (existingUser && Number(existingUser.id) !== Number(id)) {
+      throw httpError(409, "ID tài khoản đã tồn tại");
+    }
+  }
+
+  if (basePayload.role === "admin") {
+    throw httpError(400, "Không được đổi tài khoản thường thành quản trị viên");
+  }
+
   const payload = {
+    username: basePayload.username,
     fullname: basePayload.fullname,
+    role: basePayload.role,
     status: basePayload.status
   };
 
@@ -167,10 +179,18 @@ async function updateAccount(id, body) {
   }
 
   const canStoreDisplayPassword = await accountRepository.hasPasswordPlainColumn();
+  const faculty = basePayload.role === "teacher"
+    ? await lookupRepository.findFaculty(body.department || body.faculty || body.facultyId)
+    : null;
+
+  if (basePayload.role === "teacher" && !faculty) {
+    throw httpError(400, "Khoa của giảng viên không tồn tại");
+  }
+
   await accountRepository.transaction(async (connection) => {
     const passwordSql = payload.password ? ", password = ?" : "";
     const passwordPlainSql = payload.password && canStoreDisplayPassword ? ", password_plain = ?" : "";
-    const values = [payload.fullname, payload.status];
+    const values = [payload.username, payload.fullname, payload.role, payload.status];
 
     if (payload.password) {
       values.push(payload.password);
@@ -184,7 +204,7 @@ async function updateAccount(id, body) {
 
     const [userResult] = await connection.query(
       `UPDATE users
-       SET fullname = ?, status = ?${passwordSql}${passwordPlainSql}
+       SET username = ?, fullname = ?, role = ?, status = ?${passwordSql}${passwordPlainSql}
        WHERE id = ?`,
       values
     );
@@ -193,16 +213,59 @@ async function updateAccount(id, body) {
       throw httpError(404, "Không tìm thấy tài khoản");
     }
 
-    if (currentUser.role === "teacher") {
-      await connection.query("UPDATE lecturers SET fullname = ?, status = ? WHERE user_id = ?", [
-        payload.fullname,
-        payload.status === "locked" ? "inactive" : "active",
-        id
-      ]);
+    if (currentUser.role === "teacher" && basePayload.role !== "teacher") {
+      await connection.query(
+        `UPDATE subjects
+         SET lecturer_id = NULL
+         WHERE lecturer_id IN (SELECT id FROM lecturers WHERE user_id = ?)`,
+        [id]
+      );
+      await connection.query("DELETE FROM lecturers WHERE user_id = ?", [id]);
     }
 
-    if (currentUser.role === "student") {
-      await connection.query("UPDATE students SET fullname = ? WHERE user_id = ?", [payload.fullname, id]);
+    if (currentUser.role === "student" && basePayload.role !== "student") {
+      await connection.query("DELETE FROM students WHERE user_id = ?", [id]);
+    }
+
+    if (basePayload.role === "teacher") {
+      await connection.query(
+        `INSERT INTO lecturers (user_id, faculty_id, lecturer_code, fullname, email, status)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+           faculty_id = VALUES(faculty_id),
+           lecturer_code = VALUES(lecturer_code),
+           fullname = VALUES(fullname),
+           email = VALUES(email),
+           status = VALUES(status)`,
+        [
+          id,
+          faculty.id,
+          payload.username,
+          payload.fullname,
+          `${payload.username.toLowerCase()}@giangvien-uni.edu.vn`,
+          payload.status === "locked" ? "inactive" : "active"
+        ]
+      );
+    }
+
+    if (basePayload.role === "student") {
+      await connection.query(
+        `INSERT INTO students (user_id, student_code, fullname, email, admission_year, status)
+         VALUES (?, ?, ?, ?, ?, 'studying')
+         ON DUPLICATE KEY UPDATE
+           student_code = VALUES(student_code),
+           fullname = VALUES(fullname),
+           email = VALUES(email),
+           admission_year = VALUES(admission_year),
+           status = VALUES(status)`,
+        [
+          id,
+          payload.username,
+          payload.fullname,
+          `${payload.username}@sinhvien-uni.edu.vn`,
+          inferAdmissionYear(payload.username)
+        ]
+      );
     }
   });
 
@@ -261,12 +324,6 @@ async function authenticate(username, password) {
     name: user.fullname,
     role: normalizeRole(user.role)
   };
-}
-
-function inferAdmissionYear(studentCode = "") {
-  const prefix = String(studentCode).slice(0, 2);
-  const year = Number(prefix);
-  return Number.isInteger(year) && year > 0 ? 2000 + year : null;
 }
 
 module.exports = {

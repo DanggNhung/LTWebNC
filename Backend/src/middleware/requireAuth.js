@@ -1,9 +1,12 @@
+const { getRequestUser } = require("../utils/demoSessions");
+
 /**
  * Middleware kiểm tra người dùng đã đăng nhập chưa.
  * Trả về 401 nếu chưa có session hoặc session đã hết hạn.
  */
 function requireAuth(req, res, next) {
-  if (!req.session?.user) {
+  const user = getRequestUser(req);
+  if (!user) {
     return res.status(401).json({
       error: {
         message: "Bạn cần đăng nhập để thực hiện thao tác này",
@@ -12,6 +15,7 @@ function requireAuth(req, res, next) {
     });
   }
 
+  req.currentUser = user;
   next();
 }
 
@@ -20,7 +24,8 @@ function requireAuth(req, res, next) {
  * Phải dùng sau requireAuth.
  */
 function requireAdmin(req, res, next) {
-  if (req.session?.user?.role !== "Quản trị viên") {
+  const user = req.currentUser || getRequestUser(req);
+  if (user?.role !== "Quản trị viên") {
     return res.status(403).json({
       error: {
         message: "Bạn không có quyền thực hiện thao tác này",
@@ -32,4 +37,21 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { requireAdmin, requireAuth };
+function requireRole(...roles) {
+  return (req, res, next) => {
+    const user = req.currentUser || getRequestUser(req);
+    if (!roles.includes(user?.role)) {
+      return res.status(403).json({
+        error: {
+          message: "Bạn không có quyền thực hiện thao tác này",
+          statusCode: 403
+        }
+      });
+    }
+
+    req.currentUser = user;
+    return next();
+  };
+}
+
+module.exports = { requireAdmin, requireAuth, requireRole };

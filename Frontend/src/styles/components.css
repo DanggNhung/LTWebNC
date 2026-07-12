@@ -77,6 +77,11 @@
   color: var(--primary);
 }
 
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .full-width {
   width: 100%;
 }
@@ -762,4 +767,3 @@
   font-size: 40px;
   opacity: 0.5;
 }
-

@@ -8,6 +8,13 @@ export default function useApiRows(path, fallbackRows = []) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    if (!path) {
+      setRows(fallbackRowsRef.current);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -27,16 +34,19 @@ export default function useApiRows(path, fallbackRows = []) {
   }, [refresh]);
 
   async function createRow(payload) {
+    if (!path) return;
     await requestJson(path, { method: "POST", body: payload });
     await refresh();
   }
 
   async function updateRow(id, payload) {
+    if (!path) return;
     await requestJson(`${path}/${id}`, { method: "PUT", body: payload });
     await refresh();
   }
 
   async function deleteRow(id) {
+    if (!path) return;
     await requestJson(`${path}/${id}`, { method: "DELETE" });
     await refresh();
   }

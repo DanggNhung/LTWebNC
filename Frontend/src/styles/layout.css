@@ -213,7 +213,7 @@
   line-height: 1.2;
 }
 
-.page-heading span {
+.page-heading > div > span {
   color: var(--muted);
   display: block;
   margin-top: 6px;

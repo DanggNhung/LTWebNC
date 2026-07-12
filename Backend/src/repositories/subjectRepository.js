@@ -9,14 +9,36 @@ async function findAll() {
       subjects.subject_name,
       subjects.credits,
       subjects.knowledge_block,
+      subjects.knowledge_block_id,
       subjects.description,
+      subjects.status,
       subjects.faculty_id,
       subjects.lecturer_id,
       faculties.faculty_name,
-      lecturers.fullname AS lecturer_name
+      lecturers.fullname AS lecturer_name,
+      knowledge_blocks.block_name AS knowledge_block_name,
+      COUNT(enrollments.id) AS enrolled_count
     FROM subjects
     INNER JOIN faculties ON subjects.faculty_id = faculties.id
     LEFT JOIN lecturers ON subjects.lecturer_id = lecturers.id
+    LEFT JOIN knowledge_blocks ON subjects.knowledge_block_id = knowledge_blocks.id
+    LEFT JOIN enrollments
+      ON enrollments.subject_id = subjects.id
+     AND enrollments.status <> 'cancelled'
+    GROUP BY
+      subjects.id,
+      subjects.subject_code,
+      subjects.subject_name,
+      subjects.credits,
+      subjects.knowledge_block,
+      subjects.knowledge_block_id,
+      subjects.description,
+      subjects.status,
+      subjects.faculty_id,
+      subjects.lecturer_id,
+      faculties.faculty_name,
+      lecturers.fullname,
+      knowledge_blocks.block_name
     ORDER BY subjects.subject_code ASC
   `);
 

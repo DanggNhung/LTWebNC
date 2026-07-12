@@ -1,7 +1,6 @@
 import AccountsTable from "../components/accounts/AccountsTable.jsx";
 import AddRecordModal from "../components/common/AddRecordModal.jsx";
 import Button from "../components/common/Button.jsx";
-import { EmptyRow, ErrorRow, LoadingRows } from "../components/common/LoadingRows.jsx";
 import SuccessToast from "../components/common/SuccessToast.jsx";
 import AdminPageHeader from "../components/layout/AdminPageHeader.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
@@ -10,13 +9,14 @@ import { accountFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
 import useFacultyOptions from "../hooks/useFacultyOptions.js";
 import useTableEditor from "../hooks/useTableEditor.js";
+import { getDatabaseId, saveDraftChanges, splitFullName } from "../utils/adminCrud.js";
 
 const SYSTEM_ADMIN_ACCOUNT = {
   initials: "AP",
   name: "Quản trị hệ thống",
   id: "Admin",
   email: "",
-  password: "SMAdmin@2026!",
+  passwordDisplay: "SMAdmin@2026!",
   hasPassword: true,
   role: "Quản trị viên",
   status: "Hoạt động",
@@ -24,20 +24,12 @@ const SYSTEM_ADMIN_ACCOUNT = {
   avatar: "indigo"
 };
 
-function splitFullName(fullName = "") {
-  const parts = fullName.trim().split(/\s+/);
-  return {
-    lastName: parts.slice(0, -1).join(" "),
-    firstName: parts.at(-1) ?? ""
-  };
-}
-
 function getAccountInitialValues(account) {
   const nameParts = splitFullName(account.name);
   return {
     ...nameParts,
     accountId: account.id,
-    password: account.password || "",
+    password: "",
     department: account.department,
     role: account.role
   };
@@ -45,14 +37,16 @@ function getAccountInitialValues(account) {
 
 function buildAccountRow(values, existingRow = {}) {
   const accountId = values.accountId.trim();
+  const nextPassword = values.password || "";
 
   return {
     ...existingRow,
     name: `${values.lastName} ${values.firstName}`.trim(),
     id: accountId,
     email: "",
-    password: values.password || existingRow.password || "",
-    hasPassword: Boolean(values.password || existingRow.hasPassword),
+    password: nextPassword,
+    passwordDisplay: nextPassword || existingRow.passwordDisplay || "",
+    hasPassword: Boolean(nextPassword || existingRow.hasPassword),
     role: values.role,
     department: values.role === "Giảng viên" ? values.department : "",
     status: existingRow.status === "Tạm khóa" ? "Tạm khóa" : "Hoạt động",
@@ -64,7 +58,7 @@ function buildAccountRow(values, existingRow = {}) {
 function normalizeAccounts(accounts) {
   const adminAccount = accounts.find((account) => account.id === "Admin" && account.role === "Quản trị viên");
   const editableAccounts = accounts.filter((account) => !(account.id === "Admin" && account.role === "Quản trị viên"));
-  return [{ ...(adminAccount || SYSTEM_ADMIN_ACCOUNT), password: "SMAdmin@2026!", hasPassword: true }, ...editableAccounts];
+  return [{ ...(adminAccount || SYSTEM_ADMIN_ACCOUNT), password: "", passwordDisplay: "SMAdmin@2026!", hasPassword: true }, ...editableAccounts];
 }
 
 function toAccountPayload(row) {
@@ -78,22 +72,8 @@ function toAccountPayload(row) {
   };
 }
 
-function getDatabaseId(row) {
-  const databaseId = row.databaseId ?? (Number.isInteger(Number(row.id)) ? row.id : null);
-
-  if (!databaseId) {
-    throw new Error("Dữ liệu tài khoản chưa có databaseId. Hãy tải dữ liệu từ MySQL trước khi chỉnh sửa.");
-  }
-
-  return databaseId;
-}
-
-function rowsChanged(firstRow, secondRow) {
-  return JSON.stringify(toAccountPayload(firstRow)) !== JSON.stringify(toAccountPayload(secondRow));
-}
-
 function getAccountKey(account) {
-  return `${account.role}-${account.id}`;
+  return account.databaseId ?? `${account.role}-${account.id}`;
 }
 
 export default function AccountsManagement() {
@@ -120,26 +100,26 @@ export default function AccountsManagement() {
   // Inject departments dynamic từ API vào form fields
   const dynamicAccountFormFields = accountFormFields.map((field) => {
     if (field.name === "department") return { ...field, options: departments };
+    if (field.name === "password" && modalConfig?.mode === "edit") {
+      return { ...field, label: "Mật khẩu mới", placeholder: "Để trống nếu không đổi", required: false };
+    }
     return field;
   });
 
   async function saveAllChanges() {
     const editableRows = normalizedRows.filter((row) => row.id !== "Admin");
     const editableDraftRows = draftRows.filter((row) => row.id !== "Admin");
-    const draftByKey = new Map(editableDraftRows.map((row) => [getAccountKey(row), row]));
-    const rowsByKey = new Map(editableRows.map((row) => [getAccountKey(row), row]));
-    const deletedRows = editableRows.filter((row) => !draftByKey.has(getAccountKey(row)));
-    const updatedRows = editableDraftRows.filter((row) => rowsByKey.has(getAccountKey(row)) && rowsChanged(row, rowsByKey.get(getAccountKey(row))));
 
     try {
-      for (const row of deletedRows) {
-        await deleteRow(getDatabaseId(row));
-      }
-
-      for (const row of updatedRows) {
-        await updateRow(getDatabaseId(rowsByKey.get(getAccountKey(row))), toAccountPayload(row));
-      }
-
+      await saveDraftChanges({
+        rows: editableRows,
+        draftRows: editableDraftRows,
+        getKey: (row) => getDatabaseId(row, "Dữ liệu tài khoản"),
+        toPayload: toAccountPayload,
+        deleteRow,
+        updateRow,
+        getId: (row) => getDatabaseId(row, "Dữ liệu tài khoản")
+      });
       stopEditing();
       showMessage();
     } catch (err) {

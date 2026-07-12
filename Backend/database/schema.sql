@@ -95,6 +95,17 @@ CREATE TABLE IF NOT EXISTS classes (
     ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS knowledge_blocks (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  block_code VARCHAR(20) NOT NULL,
+  block_name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_knowledge_blocks_code (block_code),
+  UNIQUE KEY uq_knowledge_blocks_name (block_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS students (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id BIGINT UNSIGNED NULL,
@@ -130,15 +141,18 @@ CREATE TABLE IF NOT EXISTS subjects (
   credits TINYINT UNSIGNED NOT NULL,
   faculty_id BIGINT UNSIGNED NOT NULL,
   lecturer_id BIGINT UNSIGNED NULL,
+  knowledge_block_id BIGINT UNSIGNED NULL,
   knowledge_block ENUM('Giáo dục đại cương', 'Cơ sở ngành', 'Chuyên ngành', 'Bổ trợ') NOT NULL DEFAULT 'Chuyên ngành',
   description VARCHAR(255) NULL,
+  status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_subjects_code (subject_code),
   KEY idx_subjects_faculty (faculty_id),
   KEY idx_subjects_lecturer (lecturer_id),
-  CONSTRAINT chk_subjects_credits CHECK (credits BETWEEN 1 AND 10),
+  KEY idx_subjects_knowledge_block (knowledge_block_id),
+  CONSTRAINT chk_subjects_credits CHECK (credits BETWEEN 1 AND 3),
   CONSTRAINT fk_subjects_faculty
     FOREIGN KEY (faculty_id) REFERENCES faculties(id)
     ON UPDATE CASCADE
@@ -146,5 +160,56 @@ CREATE TABLE IF NOT EXISTS subjects (
   CONSTRAINT fk_subjects_lecturer
     FOREIGN KEY (lecturer_id) REFERENCES lecturers(id)
     ON UPDATE CASCADE
+    ON DELETE SET NULL,
+  CONSTRAINT fk_subjects_knowledge_block
+    FOREIGN KEY (knowledge_block_id) REFERENCES knowledge_blocks(id)
+    ON UPDATE CASCADE
     ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS enrollments (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  student_id BIGINT UNSIGNED NOT NULL,
+  subject_id BIGINT UNSIGNED NOT NULL,
+  semester VARCHAR(20) NOT NULL DEFAULT '',
+  academic_year VARCHAR(20) NOT NULL DEFAULT '',
+  registration_date DATE NULL,
+  status ENUM('registered', 'completed', 'cancelled') NOT NULL DEFAULT 'registered',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_enrollments_student_subject (student_id, subject_id),
+  KEY idx_enrollments_student (student_id),
+  KEY idx_enrollments_subject (subject_id),
+  CONSTRAINT fk_enrollments_student
+    FOREIGN KEY (student_id) REFERENCES students(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+  CONSTRAINT fk_enrollments_subject
+    FOREIGN KEY (subject_id) REFERENCES subjects(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS scores (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  enrollment_id BIGINT UNSIGNED NOT NULL,
+  attendance_score DECIMAL(4,2) NULL,
+  midterm_score DECIMAL(4,2) NULL,
+  final_score DECIMAL(4,2) NULL,
+  score_10 DECIMAL(4,2) NULL,
+  score_4 DECIMAL(3,2) NULL,
+  letter_grade VARCHAR(5) NULL,
+  result_status ENUM('Đạt', 'Học lại') NULL,
+  updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_scores_enrollment (enrollment_id),
+  CONSTRAINT chk_scores_attendance CHECK (attendance_score IS NULL OR attendance_score BETWEEN 0 AND 10),
+  CONSTRAINT chk_scores_midterm CHECK (midterm_score IS NULL OR midterm_score BETWEEN 0 AND 10),
+  CONSTRAINT chk_scores_final CHECK (final_score IS NULL OR final_score BETWEEN 0 AND 10),
+  CONSTRAINT fk_scores_enrollment
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

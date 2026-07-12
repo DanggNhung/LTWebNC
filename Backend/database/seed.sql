@@ -23,6 +23,14 @@ ON DUPLICATE KEY UPDATE
   major_name = VALUES(major_name),
   faculty_id = VALUES(faculty_id);
 
+INSERT INTO knowledge_blocks (block_code, block_name) VALUES
+  ('GDDC', 'Giáo dục đại cương'),
+  ('CSN', 'Cơ sở ngành'),
+  ('CN', 'Chuyên ngành'),
+  ('BT', 'Bổ trợ')
+ON DUPLICATE KEY UPDATE
+  block_name = VALUES(block_name);
+
 INSERT INTO users (username, password, password_plain, fullname, role, status) VALUES
   ('Admin', '$2b$10$YUt.iXUIyAboiyU1ZFD/s.VdltjVG.4Xi0kcdSkgF34Vp4dDSkA8O', 'SMAdmin@2026!', 'Quản trị hệ thống', 'admin', 'active')
 ON DUPLICATE KEY UPDATE

@@ -6,6 +6,12 @@ DROP TABLE IF EXISTS grades;
 DROP TABLE IF EXISTS subject_classes;
 DROP TABLE IF EXISTS semesters;
 
+DELETE FROM scores;
+ALTER TABLE scores AUTO_INCREMENT = 1;
+
+DELETE FROM enrollments;
+ALTER TABLE enrollments AUTO_INCREMENT = 1;
+
 SET @has_class_advisor_fk = (
   SELECT COUNT(*)
   FROM information_schema.TABLE_CONSTRAINTS
@@ -54,6 +60,18 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+SET @has_class_capacity = (
+  SELECT COUNT(*)
+  FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'classes'
+    AND COLUMN_NAME = 'capacity'
+);
+SET @sql = IF(@has_class_capacity > 0, 'ALTER TABLE classes DROP COLUMN capacity', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 DELETE FROM students;
 ALTER TABLE students AUTO_INCREMENT = 1;
 
@@ -74,6 +92,9 @@ ALTER TABLE majors AUTO_INCREMENT = 1;
 
 DELETE FROM faculties;
 ALTER TABLE faculties AUTO_INCREMENT = 1;
+
+DELETE FROM knowledge_blocks;
+ALTER TABLE knowledge_blocks AUTO_INCREMENT = 1;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -99,6 +120,14 @@ INSERT INTO majors (faculty_id, major_code, major_name) VALUES
 ON DUPLICATE KEY UPDATE
   major_name = VALUES(major_name),
   faculty_id = VALUES(faculty_id);
+
+INSERT INTO knowledge_blocks (block_code, block_name) VALUES
+  ('GDDC', 'Giáo dục đại cương'),
+  ('CSN', 'Cơ sở ngành'),
+  ('CN', 'Chuyên ngành'),
+  ('BT', 'Bổ trợ')
+ON DUPLICATE KEY UPDATE
+  block_name = VALUES(block_name);
 
 SET @has_password_plain = (
   SELECT COUNT(*)

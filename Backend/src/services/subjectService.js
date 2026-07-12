@@ -13,7 +13,9 @@ function toSubjectDto(row) {
     credits: Number(row.credits || 0),
     faculty: row.faculty_name || "Chưa cập nhật",
     instructor: row.lecturer_name || "Chưa phân công",
-    knowledgeBlock: row.knowledge_block || row.description || "Chuyên ngành"
+    students: Number(row.enrolled_count || 0),
+    knowledgeBlock: row.knowledge_block_name || row.knowledge_block || row.description || "Chuyên ngành",
+    status: row.status === "inactive" ? "Tạm dừng" : "Hoạt động"
   };
 }
 
@@ -33,8 +35,8 @@ async function buildSubjectPayload(body) {
     throw httpError(400, "Thiếu tên môn học");
   }
 
-  if (!Number.isInteger(credits) || credits < 1 || credits > 10) {
-    throw httpError(400, "Số tín chỉ phải là số tự nhiên từ 1 đến 10");
+  if (!Number.isInteger(credits) || credits < 1 || credits > 3) {
+    throw httpError(400, "Số tín chỉ phải là số tự nhiên từ 1 đến 3");
   }
 
   if (!KNOWLEDGE_BLOCKS.has(knowledgeBlock)) {
@@ -55,14 +57,18 @@ async function buildSubjectPayload(body) {
     throw httpError(400, "Giảng viên hướng dẫn không tồn tại hoặc không thuộc khoa đã chọn");
   }
 
+  const knowledgeBlockRow = await lookupRepository.findKnowledgeBlock(knowledgeBlock);
+
   return {
     subject_code: subjectCode,
     subject_name: subjectName,
     credits,
     faculty_id: faculty.id,
     lecturer_id: lecturer.id,
+    knowledge_block_id: knowledgeBlockRow?.id || null,
     knowledge_block: knowledgeBlock,
-    description: body.description || knowledgeBlock
+    description: body.description || knowledgeBlock,
+    status: "active"
   };
 }
 

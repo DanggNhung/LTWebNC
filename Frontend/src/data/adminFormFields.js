@@ -33,14 +33,13 @@ export const classFormFields = [
     type: "select",
     dependsOn: "department",
     optionMap: {} // Được inject dynamic từ useFacultyOptions
-  },
-  { name: "size", label: "Sĩ số", type: "number", placeholder: "Nhập sĩ số" }
+  }
 ];
 
 export const subjectFormFields = [
   { name: "subjectCode", label: "Mã môn", placeholder: "Ví dụ: CS-101" },
   { name: "subjectName", label: "Tên môn học", placeholder: "Nhập tên môn học" },
-  { name: "credits", label: "Số tín chỉ", type: "number", placeholder: "Từ 1 đến 10" },
+  { name: "credits", label: "Số tín chỉ", type: "number", placeholder: "Từ 1 đến 3", min: 1, max: 3 },
   {
     name: "department",
     label: "Khoa",
@@ -58,7 +57,7 @@ export const subjectFormFields = [
     name: "knowledgeBlock",
     label: "Khối kiến thức",
     type: "select",
-    options: ["Giáo dục đại cương", "Chuyên ngành", "Bổ trợ", "Cơ sở ngành"]
+    options: ["Giáo dục đại cương", "Cơ sở ngành", "Chuyên ngành", "Bổ trợ"]
   }
 ];
 

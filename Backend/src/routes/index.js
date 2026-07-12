@@ -3,6 +3,7 @@ const accountRoutes = require("./accountRoutes");
 const authRoutes = require("./authRoutes");
 const classRoutes = require("./classRoutes");
 const facultyRoutes = require("./facultyRoutes");
+const portalRoutes = require("./portalRoutes");
 const studentRoutes = require("./studentRoutes");
 const subjectRoutes = require("./subjectRoutes");
 const db = require("../config/database");
@@ -48,5 +49,6 @@ router.use("/accounts", requireAuth, requireAdmin, accountRoutes);
 router.use("/classes", requireAuth, requireAdmin, classRoutes);
 router.use("/students", requireAuth, requireAdmin, studentRoutes);
 router.use("/subjects", requireAuth, subjectRoutes);
+router.use("/portal", requireAuth, portalRoutes);
 
 module.exports = router;

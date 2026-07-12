@@ -34,15 +34,26 @@ function isSystemAdmin(account) {
 }
 
 function getPasswordDisplay(account) {
-  if (isSystemAdmin(account)) return "SMAdmin@2026!";
-  return account.hasPassword || account.password ? "Đã đặt" : "Chưa đặt";
+  if (account.passwordDisplay) return account.passwordDisplay;
+  if (account.password) return account.password;
+  return account.hasPassword ? "Mật khẩu" : "Chưa đặt";
 }
 
 function getUniqueOptions(values) {
   return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, "vi"));
 }
 
-export default function AccountsTable({ accounts, isEditing = false, loading = false, error = null, onCancelEdit, onDelete, onEdit, onSaveAll, onToggleStatus }) {
+export default function AccountsTable({
+  accounts,
+  isEditing = false,
+  loading = false,
+  error = null,
+  onCancelEdit,
+  onDelete,
+  onEdit,
+  onSaveAll,
+  onToggleStatus
+}) {
   const [roleFilter, setRoleFilter] = useState("");
   const roleOptions = useMemo(() => getUniqueOptions(accounts.map((account) => account.role)), [accounts]);
   const filteredAccounts = useMemo(
@@ -91,7 +102,7 @@ export default function AccountsTable({ accounts, isEditing = false, loading = f
                 const status = getAccountStatus(account.status);
 
                 return (
-                  <tr key={`${account.role}-${account.id}`}>
+                  <tr key={account.databaseId ?? `${account.role}-${account.id}`}>
                     <td>
                       <div className="identity-cell">
                         <span className={`avatar ${account.avatar}`}>{getGivenNameInitial(account.name)}</span>
