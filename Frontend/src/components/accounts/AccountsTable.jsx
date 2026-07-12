@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { departmentAbbreviations } from "../../data/academicStructure.js";
 import Icon from "../common/Icon.jsx";
+import { EmptyRow, ErrorRow, LoadingRows } from "../common/LoadingRows.jsx";
 import StatusBadge from "../common/StatusBadge.jsx";
 
 function toSlug(value) {
@@ -25,7 +26,7 @@ function getAccountStatus(status) {
 function getDisplayName(account) {
   if (account.role !== "Giảng viên" || !account.department) return account.name;
   const abbreviation = departmentAbbreviations[account.department];
-  return abbreviation ? `${account.name} (${abbreviation})` : account.name;
+  return abbreviation ? `${account.name} (${abbreviation})` : `${account.name} (${account.department})`;
 }
 
 function isSystemAdmin(account) {
@@ -41,7 +42,7 @@ function getUniqueOptions(values) {
   return [...new Set(values.filter(Boolean))].sort((first, second) => first.localeCompare(second, "vi"));
 }
 
-export default function AccountsTable({ accounts, isEditing = false, onCancelEdit, onDelete, onEdit, onSaveAll, onToggleStatus }) {
+export default function AccountsTable({ accounts, isEditing = false, loading = false, error = null, onCancelEdit, onDelete, onEdit, onSaveAll, onToggleStatus }) {
   const [roleFilter, setRoleFilter] = useState("");
   const roleOptions = useMemo(() => getUniqueOptions(accounts.map((account) => account.role)), [accounts]);
   const filteredAccounts = useMemo(
@@ -79,48 +80,56 @@ export default function AccountsTable({ accounts, isEditing = false, onCancelEdi
             </tr>
           </thead>
           <tbody>
-            {filteredAccounts.map((account) => {
-              const status = getAccountStatus(account.status);
+            {loading ? (
+              <LoadingRows cols={isEditing ? 5 : 4} />
+            ) : error ? (
+              <ErrorRow cols={isEditing ? 5 : 4} message={error.message} />
+            ) : filteredAccounts.length === 0 ? (
+              <EmptyRow cols={isEditing ? 5 : 4} />
+            ) : (
+              filteredAccounts.map((account) => {
+                const status = getAccountStatus(account.status);
 
-              return (
-                <tr key={`${account.role}-${account.id}`}>
-                  <td>
-                    <div className="identity-cell">
-                      <span className={`avatar ${account.avatar}`}>{getGivenNameInitial(account.name)}</span>
-                      <span>
-                        <strong>{getDisplayName(account)}</strong>
-                        <small>ID: {account.id}</small>
-                      </span>
-                    </div>
-                  </td>
-                  <td className="mono">{getPasswordDisplay(account)}</td>
-                  <td><span className={`role-chip role-${toSlug(account.role)}`}>{account.role}</span></td>
-                  <td>
-                    {isEditing && !isSystemAdmin(account) ? (
-                      <button className="status-toggle-button" type="button" onClick={() => onToggleStatus?.(account)}>
+                return (
+                  <tr key={`${account.role}-${account.id}`}>
+                    <td>
+                      <div className="identity-cell">
+                        <span className={`avatar ${account.avatar}`}>{getGivenNameInitial(account.name)}</span>
+                        <span>
+                          <strong>{getDisplayName(account)}</strong>
+                          <small>ID: {account.id}</small>
+                        </span>
+                      </div>
+                    </td>
+                    <td className="mono">{getPasswordDisplay(account)}</td>
+                    <td><span className={`role-chip role-${toSlug(account.role)}`}>{account.role}</span></td>
+                    <td>
+                      {isEditing && !isSystemAdmin(account) ? (
+                        <button className="status-toggle-button" type="button" onClick={() => onToggleStatus?.(account)}>
+                          <StatusBadge status={status} />
+                        </button>
+                      ) : (
                         <StatusBadge status={status} />
-                      </button>
-                    ) : (
-                      <StatusBadge status={status} />
-                    )}
-                  </td>
-                  {isEditing && (
-                    <td className="center-column edit-column">
-                      {!isSystemAdmin(account) && (
-                        <>
-                          <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${account.name}`} onClick={() => onEdit?.(account)}>
-                            <Icon name="edit" />
-                          </button>
-                          <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${account.name}`} onClick={() => onDelete?.(account)}>
-                            <Icon name="delete" />
-                          </button>
-                        </>
                       )}
                     </td>
-                  )}
-                </tr>
-              );
-            })}
+                    {isEditing && (
+                      <td className="center-column edit-column">
+                        {!isSystemAdmin(account) && (
+                          <>
+                            <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${account.name}`} onClick={() => onEdit?.(account)}>
+                              <Icon name="edit" />
+                            </button>
+                            <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${account.name}`} onClick={() => onDelete?.(account)}>
+                              <Icon name="delete" />
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

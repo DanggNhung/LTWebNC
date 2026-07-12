@@ -1,4 +1,5 @@
 import Icon from "../common/Icon.jsx";
+import { EmptyRow, ErrorRow, LoadingRows } from "../common/LoadingRows.jsx";
 import StatusBadge from "../common/StatusBadge.jsx";
 
 function getGivenNameInitial(fullName = "") {
@@ -13,6 +14,8 @@ function getStudentStatus(status) {
 export default function RegistrationTable({
   rows,
   isEditing = false,
+  loading = false,
+  error = null,
   onCancelEdit,
   onDelete,
   onEdit,
@@ -40,45 +43,53 @@ export default function RegistrationTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
-              const status = getStudentStatus(row.status);
+            {loading ? (
+              <LoadingRows cols={isEditing ? 7 : 6} />
+            ) : error ? (
+              <ErrorRow cols={isEditing ? 7 : 6} message={error.message} />
+            ) : rows.length === 0 ? (
+              <EmptyRow cols={isEditing ? 7 : 6} />
+            ) : (
+              rows.map((row) => {
+                const status = getStudentStatus(row.status);
 
-              return (
-                <tr key={row.studentId}>
-                  <td>
-                    <div className="identity-cell">
-                      <span className={`avatar ${row.avatar}`}>{getGivenNameInitial(row.name)}</span>
-                      <span>
-                        <strong>{row.name}</strong>
-                      </span>
-                    </div>
-                  </td>
-                  <td className="mono">{row.studentId}</td>
-                  <td>{row.birthDate}</td>
-                  <td>{row.gender}</td>
-                  <td>{row.className}</td>
-                  <td>
-                    {isEditing ? (
-                      <button className="status-toggle-button" type="button" onClick={() => onToggleStatus?.(row)}>
-                        <StatusBadge status={status} />
-                      </button>
-                    ) : (
-                      <StatusBadge status={status} />
-                    )}
-                  </td>
-                  {isEditing && (
-                    <td className="center-column edit-column">
-                      <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${row.name}`} onClick={() => onEdit?.(row)}>
-                        <Icon name="edit" />
-                      </button>
-                      <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${row.name}`} onClick={() => onDelete?.(row)}>
-                        <Icon name="delete" />
-                      </button>
+                return (
+                  <tr key={row.studentId}>
+                    <td>
+                      <div className="identity-cell">
+                        <span className={`avatar ${row.avatar}`}>{getGivenNameInitial(row.name)}</span>
+                        <span>
+                          <strong>{row.name}</strong>
+                        </span>
+                      </div>
                     </td>
-                  )}
-                </tr>
-              );
-            })}
+                    <td className="mono">{row.studentId}</td>
+                    <td>{row.birthDate}</td>
+                    <td>{row.gender}</td>
+                    <td>{row.className}</td>
+                    <td>
+                      {isEditing ? (
+                        <button className="status-toggle-button" type="button" onClick={() => onToggleStatus?.(row)}>
+                          <StatusBadge status={status} />
+                        </button>
+                      ) : (
+                        <StatusBadge status={status} />
+                      )}
+                    </td>
+                    {isEditing && (
+                      <td className="center-column edit-column">
+                        <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${row.name}`} onClick={() => onEdit?.(row)}>
+                          <Icon name="edit" />
+                        </button>
+                        <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${row.name}`} onClick={() => onDelete?.(row)}>
+                          <Icon name="delete" />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

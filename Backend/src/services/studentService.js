@@ -47,6 +47,10 @@ async function buildStudentPayload(body, existingStudentCode) {
     throw httpError(400, "Thiếu mã sinh viên");
   }
 
+  if (!/^\d{8}$/.test(studentCode)) {
+    throw httpError(400, "Mã sinh viên phải là chuỗi 8 chữ số");
+  }
+
   if (!fullname) {
     throw httpError(400, "Thiếu họ tên sinh viên");
   }

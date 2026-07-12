@@ -1,4 +1,3 @@
-import { useState } from "react";
 import AddRecordModal from "../components/common/AddRecordModal.jsx";
 import Button from "../components/common/Button.jsx";
 import SuccessToast from "../components/common/SuccessToast.jsx";
@@ -8,6 +7,8 @@ import AdminTopbar from "../components/layout/AdminTopbar.jsx";
 import SubjectInventoryTable from "../components/subjects/SubjectInventoryTable.jsx";
 import { subjectFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
+import useFacultyOptions from "../hooks/useFacultyOptions.js";
+import useTableEditor from "../hooks/useTableEditor.js";
 
 function getSubjectInitialValues(subject) {
   return {
@@ -69,33 +70,33 @@ function getInstructorOptionMap(accounts) {
 }
 
 export default function SubjectsManagement() {
-  const { createRow, deleteRow, rows, updateRow } = useApiRows("/subjects", []);
+  const { createRow, deleteRow, rows, loading, error, updateRow } = useApiRows("/subjects", []);
   const { rows: accountRows } = useApiRows("/accounts", []);
-  const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState([]);
-  const [modalConfig, setModalConfig] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
+  const { departments } = useFacultyOptions();
+  const {
+    cancelEditing,
+    closeModal,
+    draftRows,
+    isTableEditing,
+    modalConfig,
+    openAddModal,
+    openEditModal,
+    setDraftRows,
+    showMessage,
+    startEditing,
+    stopEditing,
+    toastMessage
+  } = useTableEditor(rows);
 
   const displayedRows = isTableEditing ? draftRows : rows;
   const instructorOptionMap = getInstructorOptionMap(accountRows);
-  const dynamicSubjectFormFields = subjectFormFields.map((field) =>
-    field.name === "instructor" ? { ...field, optionMap: instructorOptionMap } : field
-  );
 
-  function showMessage(message = "Thành công") {
-    setToastMessage(message);
-    window.setTimeout(() => setToastMessage(""), 1800);
-  }
-
-  function startEditing() {
-    setDraftRows(rows);
-    setIsTableEditing(true);
-  }
-
-  function cancelEditing() {
-    setDraftRows(rows);
-    setIsTableEditing(false);
-  }
+  // Inject departments dynamic từ API, instructorOptionMap từ accounts
+  const dynamicSubjectFormFields = subjectFormFields.map((field) => {
+    if (field.name === "department") return { ...field, options: departments };
+    if (field.name === "instructor") return { ...field, optionMap: instructorOptionMap };
+    return field;
+  });
 
   async function saveAllChanges() {
     const draftByKey = new Map(draftRows.map((row) => [row.code, row]));
@@ -112,10 +113,10 @@ export default function SubjectsManagement() {
         await updateRow(getDatabaseId(rowsByKey.get(row.code)), toSubjectPayload(row));
       }
 
-      setIsTableEditing(false);
+      stopEditing();
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
+    } catch (err) {
+      showMessage(err.message);
     }
   }
 
@@ -132,9 +133,9 @@ export default function SubjectsManagement() {
     try {
       await createRow(toSubjectPayload(buildSubjectRow(values)));
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
-      throw error;
+    } catch (err) {
+      showMessage(err.message);
+      throw err;
     }
   }
 
@@ -149,8 +150,8 @@ export default function SubjectsManagement() {
             description="Quản lý mã môn, số tín chỉ, khoa, giảng viên hướng dẫn và khối kiến thức của từng môn học."
             action={(
               <div className="admin-header-actions">
-                <Button icon="add" onClick={() => setModalConfig({ mode: "add", initialValues: {} })}>Thêm môn học</Button>
-                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? cancelEditing : startEditing}>
+                <Button icon="add" onClick={() => openAddModal()}>Thêm môn học</Button>
+                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? () => cancelEditing(rows) : () => startEditing(rows)}>
                   Chỉnh sửa
                 </Button>
               </div>
@@ -158,10 +159,13 @@ export default function SubjectsManagement() {
           />
           <SubjectInventoryTable
             subjects={displayedRows}
+            departments={departments}
             isEditing={isTableEditing}
-            onCancelEdit={cancelEditing}
+            loading={loading}
+            error={error}
+            onCancelEdit={() => cancelEditing(rows)}
             onDelete={(subject) => setDraftRows((currentRows) => currentRows.filter((row) => row.code !== subject.code))}
-            onEdit={(subject) => setModalConfig({ mode: "edit", rowKey: subject.code, initialValues: getSubjectInitialValues(subject) })}
+            onEdit={(subject) => openEditModal(subject.code, getSubjectInitialValues(subject))}
             onSaveAll={saveAllChanges}
           />
         </div>
@@ -172,7 +176,7 @@ export default function SubjectsManagement() {
         fields={dynamicSubjectFormFields}
         initialValues={modalConfig?.initialValues}
         isOpen={Boolean(modalConfig)}
-        onClose={() => setModalConfig(null)}
+        onClose={closeModal}
         onSubmit={handleSubmit}
         submitIcon={modalConfig?.mode === "edit" ? "save" : "add"}
         submitLabel={modalConfig?.mode === "edit" ? "Lưu" : "Thêm"}

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import RegistrationTable from "../components/admin/RegistrationTable.jsx";
 import AddRecordModal from "../components/common/AddRecordModal.jsx";
 import Button from "../components/common/Button.jsx";
@@ -8,6 +7,7 @@ import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import AdminTopbar from "../components/layout/AdminTopbar.jsx";
 import { studentFormFields } from "../data/adminFormFields.js";
 import useApiRows from "../hooks/useApiRows.js";
+import useTableEditor from "../hooks/useTableEditor.js";
 
 const EMPTY_DATE_TEXT = "Chưa cập nhật";
 const EMPTY_GENDER_TEXT = "Chưa cập nhật";
@@ -91,12 +91,22 @@ function rowsChanged(firstRow, secondRow) {
 }
 
 export default function AdminDashboard() {
-  const { createRow, deleteRow, rows, updateRow } = useApiRows("/students", []);
+  const { createRow, deleteRow, rows, loading, error, updateRow } = useApiRows("/students", []);
   const { rows: classRows } = useApiRows("/classes", []);
-  const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState([]);
-  const [modalConfig, setModalConfig] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
+  const {
+    cancelEditing,
+    closeModal,
+    draftRows,
+    isTableEditing,
+    modalConfig,
+    openAddModal,
+    openEditModal,
+    setDraftRows,
+    showMessage,
+    startEditing,
+    stopEditing,
+    toastMessage
+  } = useTableEditor(rows);
 
   const displayedRows = isTableEditing ? draftRows : rows;
   const classOptions = classRows.map((classRow) => classRow.id);
@@ -116,21 +126,6 @@ export default function AdminDashboard() {
     return field;
   });
 
-  function showMessage(message = "Thành công") {
-    setToastMessage(message);
-    window.setTimeout(() => setToastMessage(""), 1800);
-  }
-
-  function startEditing() {
-    setDraftRows(rows);
-    setIsTableEditing(true);
-  }
-
-  function cancelEditing() {
-    setDraftRows(rows);
-    setIsTableEditing(false);
-  }
-
   async function saveAllChanges() {
     const draftByKey = new Map(draftRows.map((row) => [row.studentId, row]));
     const rowsByKey = new Map(rows.map((row) => [row.studentId, row]));
@@ -146,10 +141,10 @@ export default function AdminDashboard() {
         await updateRow(getDatabaseId(rowsByKey.get(row.studentId)), toStudentPayload(row));
       }
 
-      setIsTableEditing(false);
+      stopEditing();
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
+    } catch (err) {
+      showMessage(err.message);
     }
   }
 
@@ -166,9 +161,9 @@ export default function AdminDashboard() {
     try {
       await createRow(toStudentPayload(buildStudentRow(values)));
       showMessage();
-    } catch (error) {
-      showMessage(error.message);
-      throw error;
+    } catch (err) {
+      showMessage(err.message);
+      throw err;
     }
   }
 
@@ -193,8 +188,8 @@ export default function AdminDashboard() {
             description="Quản lý danh sách sinh viên, mã sinh viên, ngày sinh, giới tính, lớp và trạng thái học tập."
             action={(
               <div className="admin-header-actions">
-                <Button icon="add" onClick={() => setModalConfig({ mode: "add", initialValues: {} })}>Thêm sinh viên</Button>
-                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? cancelEditing : startEditing}>
+                <Button icon="add" onClick={() => openAddModal()}>Thêm sinh viên</Button>
+                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? () => cancelEditing(rows) : () => startEditing(rows)}>
                   Chỉnh sửa
                 </Button>
               </div>
@@ -203,9 +198,11 @@ export default function AdminDashboard() {
           <RegistrationTable
             rows={displayedRows}
             isEditing={isTableEditing}
-            onCancelEdit={cancelEditing}
+            loading={loading}
+            error={error}
+            onCancelEdit={() => cancelEditing(rows)}
             onDelete={(student) => setDraftRows((currentRows) => currentRows.filter((row) => row.studentId !== student.studentId))}
-            onEdit={(student) => setModalConfig({ mode: "edit", rowKey: student.studentId, initialValues: getStudentInitialValues(student) })}
+            onEdit={(student) => openEditModal(student.studentId, getStudentInitialValues(student))}
             onSaveAll={saveAllChanges}
             onToggleStatus={toggleStudentStatus}
           />
@@ -217,7 +214,7 @@ export default function AdminDashboard() {
         fields={dynamicStudentFormFields}
         initialValues={modalConfig?.initialValues}
         isOpen={Boolean(modalConfig)}
-        onClose={() => setModalConfig(null)}
+        onClose={closeModal}
         onSubmit={handleSubmit}
         submitIcon={modalConfig?.mode === "edit" ? "save" : "add"}
         submitLabel={modalConfig?.mode === "edit" ? "Lưu" : "Thêm"}

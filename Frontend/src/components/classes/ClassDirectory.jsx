@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { departments, majorsByDepartment } from "../../data/academicStructure.js";
 import Icon from "../common/Icon.jsx";
+import { EmptyRow, ErrorRow, LoadingRows } from "../common/LoadingRows.jsx";
 
-export default function ClassDirectory({ classes, isEditing = false, onCancelEdit, onDelete, onEdit, onSaveAll }) {
+export default function ClassDirectory({ classes, departments = [], majorsByDepartment = {}, isEditing = false, loading = false, error = null, onCancelEdit, onDelete, onEdit, onSaveAll }) {
   const [filters, setFilters] = useState({ faculty: "", major: "" });
   const majorOptions = filters.faculty ? majorsByDepartment[filters.faculty] ?? [] : [];
   const filteredClasses = useMemo(
@@ -62,25 +62,33 @@ export default function ClassDirectory({ classes, isEditing = false, onCancelEdi
             </tr>
           </thead>
           <tbody>
-            {filteredClasses.map((item) => (
-              <tr key={item.id}>
-                <td className="mono">{item.id}</td>
-                <td><strong>{item.name}</strong></td>
-                <td>{item.major}</td>
-                <td>{item.faculty}</td>
-                <td className="center-column">{item.students}</td>
-                {isEditing && (
-                  <td className="center-column edit-column">
-                    <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${item.name}`} onClick={() => onEdit?.(item)}>
-                      <Icon name="edit" />
-                    </button>
-                    <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${item.name}`} onClick={() => onDelete?.(item)}>
-                      <Icon name="delete" />
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
+            {loading ? (
+              <LoadingRows cols={isEditing ? 6 : 5} />
+            ) : error ? (
+              <ErrorRow cols={isEditing ? 6 : 5} message={error.message} />
+            ) : filteredClasses.length === 0 ? (
+              <EmptyRow cols={isEditing ? 6 : 5} />
+            ) : (
+              filteredClasses.map((item) => (
+                <tr key={item.id}>
+                  <td className="mono">{item.id}</td>
+                  <td><strong>{item.name}</strong></td>
+                  <td>{item.major}</td>
+                  <td>{item.faculty}</td>
+                  <td className="center-column">{item.students}</td>
+                  {isEditing && (
+                    <td className="center-column edit-column">
+                      <button className="icon-button edit-row-button" type="button" aria-label={`Chỉnh sửa ${item.name}`} onClick={() => onEdit?.(item)}>
+                        <Icon name="edit" />
+                      </button>
+                      <button className="icon-button delete-row-button" type="button" aria-label={`Xóa ${item.name}`} onClick={() => onDelete?.(item)}>
+                        <Icon name="delete" />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
