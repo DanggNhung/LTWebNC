@@ -169,6 +169,21 @@
   margin: -4px 0 14px;
 }
 
+.remember-login {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+  margin: -4px 0 18px;
+}
+
+.remember-login input {
+  height: 16px;
+  width: 16px;
+}
+
 .login-options label {
   align-items: center;
   display: flex;
@@ -205,17 +220,6 @@
 }
 
 
-.grade-toolbar {
-  align-items: end;
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 280px minmax(240px, 1fr);
-  margin-bottom: 24px;
-  padding: 20px;
-}
-
-.grade-toolbar select,
-.grade-toolbar input,
 .grade-table input {
   border: 1px solid var(--outline);
   border-radius: var(--radius);
@@ -225,18 +229,23 @@
   width: 100%;
 }
 
-.grade-toolbar label span {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-}
-
-.grade-toolbar p {
-  margin-bottom: 8px;
-}
-
 .grade-panel {
   overflow: hidden;
+}
+
+.grade-panel-title {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+}
+
+.grade-panel-title select {
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
+  min-height: 42px;
+  min-width: 260px;
+  outline: 0;
+  padding: 0 12px;
 }
 
 .grade-table {
@@ -249,8 +258,15 @@
 }
 
 @media (max-width: 900px) {
-  .grade-toolbar {
-    grid-template-columns: 1fr;
+  .grade-panel-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .grade-panel-title select {
+    min-width: 0;
+    width: 100%;
   }
 }
 

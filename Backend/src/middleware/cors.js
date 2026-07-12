@@ -6,13 +6,14 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173,http
 function corsMiddleware(req, res, next) {
   const { origin } = req.headers;
 
-  if (origin && allowedOrigins.includes(origin)) {
+  const isLocalhost = origin && (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:"));
+  if (origin && (allowedOrigins.includes(origin) || isLocalhost)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Demo-Session-Id");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
 
   if (req.method === "OPTIONS") {

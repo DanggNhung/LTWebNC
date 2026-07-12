@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import AccountsTable from "../components/accounts/AccountsTable.jsx";
 import AddRecordModal from "../components/common/AddRecordModal.jsx";
 import Button from "../components/common/Button.jsx";
@@ -7,56 +6,47 @@ import AdminPageHeader from "../components/layout/AdminPageHeader.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import AdminTopbar from "../components/layout/AdminTopbar.jsx";
 import { accountFormFields } from "../data/adminFormFields.js";
-import { registrations as fallbackStudents } from "../data/adminData.js";
-import { accounts as fallbackAccounts } from "../data/accountsData.js";
-import useApiResource from "../hooks/useApiResource.js";
-import usePersistentAdminRows from "../hooks/usePersistentAdminRows.js";
+import useApiRows from "../hooks/useApiRows.js";
+import useFacultyOptions from "../hooks/useFacultyOptions.js";
+import useTableEditor from "../hooks/useTableEditor.js";
+import { getDatabaseId, saveDraftChanges, splitFullName } from "../utils/adminCrud.js";
 
 const SYSTEM_ADMIN_ACCOUNT = {
   initials: "AP",
   name: "Quản trị hệ thống",
   id: "Admin",
   email: "",
-  password: "admin123",
+  passwordDisplay: "SMAdmin@2026!",
+  hasPassword: true,
   role: "Quản trị viên",
   status: "Hoạt động",
   lastLogin: "Vừa xong",
   avatar: "indigo"
 };
 
-function splitFullName(fullName) {
-  const parts = fullName.trim().split(/\s+/);
-  return {
-    lastName: parts.slice(0, -1).join(" "),
-    firstName: parts.at(-1) ?? ""
-  };
-}
-
 function getAccountInitialValues(account) {
   const nameParts = splitFullName(account.name);
   return {
     ...nameParts,
     accountId: account.id,
-    password: account.password,
+    password: "",
     department: account.department,
     role: account.role
   };
 }
 
-function getAccountEmail(accountId, role) {
-  if (role === "Quản trị viên") return "";
-  if (role === "Giảng viên") return `${accountId.toLowerCase()}@giangvien-uni.edu.vn`;
-  return `${accountId}@sinhvien-uni.edu.vn`;
-}
-
 function buildAccountRow(values, existingRow = {}) {
   const accountId = values.accountId.trim();
+  const nextPassword = values.password || "";
+
   return {
     ...existingRow,
     name: `${values.lastName} ${values.firstName}`.trim(),
     id: accountId,
-    email: getAccountEmail(accountId, values.role),
-    password: values.password,
+    email: "",
+    password: nextPassword,
+    passwordDisplay: nextPassword || existingRow.passwordDisplay || "",
+    hasPassword: Boolean(nextPassword || existingRow.hasPassword),
     role: values.role,
     department: values.role === "Giảng viên" ? values.department : "",
     status: existingRow.status === "Tạm khóa" ? "Tạm khóa" : "Hoạt động",
@@ -66,109 +56,100 @@ function buildAccountRow(values, existingRow = {}) {
 }
 
 function normalizeAccounts(accounts) {
-  const editableAccounts = accounts.filter((account) => account.id !== SYSTEM_ADMIN_ACCOUNT.id);
-  return [SYSTEM_ADMIN_ACCOUNT, ...editableAccounts];
+  const adminAccount = accounts.find((account) => account.id === "Admin" && account.role === "Quản trị viên");
+  const editableAccounts = accounts.filter((account) => !(account.id === "Admin" && account.role === "Quản trị viên"));
+  return [{ ...(adminAccount || SYSTEM_ADMIN_ACCOUNT), password: "", passwordDisplay: "SMAdmin@2026!", hasPassword: true }, ...editableAccounts];
 }
 
-function readStoredRows(storageKey, fallbackRows) {
-  try {
-    const storedValue = localStorage.getItem(storageKey);
-    return storedValue ? JSON.parse(storedValue) : fallbackRows;
-  } catch {
-    return fallbackRows;
-  }
+function toAccountPayload(row) {
+  return {
+    accountId: row.id,
+    name: row.name,
+    password: row.password || undefined,
+    role: row.role,
+    department: row.department,
+    status: row.status
+  };
 }
 
-function writeStoredRows(storageKey, rows) {
-  localStorage.setItem(storageKey, JSON.stringify(rows));
-}
-
-function syncStudentsFromAccounts(accounts) {
-  const students = readStoredRows("admin-students", fallbackStudents);
-  const studentAccounts = accounts.filter((account) => account.role === "Sinh viên");
-  const nextStudents = studentAccounts.reduce((currentStudents, account) => {
-    const studentRow = {
-      name: account.name,
-      email: account.email,
-      studentId: account.id,
-      birthDate: "",
-      gender: "",
-      className: "",
-      status: "Đang học",
-      avatar: account.avatar ?? "indigo"
-    };
-
-    return currentStudents.some((student) => student.studentId === account.id)
-      ? currentStudents.map((student) =>
-          student.studentId === account.id
-            ? { ...student, name: account.name, email: account.email }
-            : student
-        )
-      : [studentRow, ...currentStudents];
-  }, students);
-
-  writeStoredRows("admin-students", nextStudents);
+function getAccountKey(account) {
+  return account.databaseId ?? `${account.role}-${account.id}`;
 }
 
 export default function AccountsManagement() {
-  const { data: sourceAccounts } = useApiResource("/accounts", fallbackAccounts);
-  const { rows, saveRows } = usePersistentAdminRows("admin-accounts", normalizeAccounts(sourceAccounts));
-  const [isTableEditing, setIsTableEditing] = useState(false);
-  const [draftRows, setDraftRows] = useState(rows);
-  const [modalConfig, setModalConfig] = useState(null);
-  const [toastMessage, setToastMessage] = useState("");
+  const { createRow, deleteRow, rows, loading, error, updateRow } = useApiRows("/accounts", []);
+  const { departments } = useFacultyOptions();
+  const {
+    cancelEditing,
+    closeModal,
+    draftRows,
+    isTableEditing,
+    modalConfig,
+    openAddModal,
+    openEditModal,
+    setDraftRows,
+    showMessage,
+    startEditing,
+    stopEditing,
+    toastMessage
+  } = useTableEditor(rows);
 
-  const displayedRows = isTableEditing ? draftRows : normalizeAccounts(rows);
+  const normalizedRows = normalizeAccounts(rows);
+  const displayedRows = isTableEditing ? draftRows : normalizedRows;
 
-  useEffect(() => {
-    syncStudentsFromAccounts(normalizeAccounts(rows));
-  }, [rows]);
+  // Inject departments dynamic từ API vào form fields
+  const dynamicAccountFormFields = accountFormFields.map((field) => {
+    if (field.name === "department") return { ...field, options: departments };
+    if (field.name === "password" && modalConfig?.mode === "edit") {
+      return { ...field, label: "Mật khẩu mới", placeholder: "Để trống nếu không đổi", required: false };
+    }
+    return field;
+  });
 
-  function showSuccess() {
-    setToastMessage("Thành công");
-    window.setTimeout(() => setToastMessage(""), 1800);
+  async function saveAllChanges() {
+    const editableRows = normalizedRows.filter((row) => row.id !== "Admin");
+    const editableDraftRows = draftRows.filter((row) => row.id !== "Admin");
+
+    try {
+      await saveDraftChanges({
+        rows: editableRows,
+        draftRows: editableDraftRows,
+        getKey: (row) => getDatabaseId(row, "Dữ liệu tài khoản"),
+        toPayload: toAccountPayload,
+        deleteRow,
+        updateRow,
+        getId: (row) => getDatabaseId(row, "Dữ liệu tài khoản")
+      });
+      stopEditing();
+      showMessage();
+    } catch (err) {
+      showMessage(err.message);
+    }
   }
 
-  function startEditing() {
-    setDraftRows(normalizeAccounts(rows));
-    setIsTableEditing(true);
-  }
-
-  function cancelEditing() {
-    setDraftRows(normalizeAccounts(rows));
-    setIsTableEditing(false);
-  }
-
-  function saveAllChanges() {
-    const nextRows = normalizeAccounts(draftRows);
-    saveRows(nextRows);
-    syncStudentsFromAccounts(nextRows);
-    setIsTableEditing(false);
-    showSuccess();
-  }
-
-  function handleSubmit(values) {
+  async function handleSubmit(values) {
     if (modalConfig?.mode === "edit") {
       setDraftRows((currentRows) =>
         currentRows.map((row) =>
-          `${row.role}-${row.id}` === modalConfig.rowKey ? buildAccountRow(values, row) : row
+          getAccountKey(row) === modalConfig.rowKey ? buildAccountRow(values, row) : row
         )
       );
       return;
     }
 
-    const newAccount = buildAccountRow(values);
-    const nextRows = normalizeAccounts([newAccount, ...rows]);
-    saveRows(nextRows);
-    setDraftRows(nextRows);
-    syncStudentsFromAccounts(nextRows);
-    showSuccess();
+    try {
+      await createRow(toAccountPayload(buildAccountRow(values)));
+      showMessage();
+    } catch (err) {
+      showMessage(err.message);
+      throw err;
+    }
   }
 
   function toggleAccountStatus(account) {
     setDraftRows((currentRows) =>
       currentRows.map((row) => {
-        if (`${row.role}-${row.id}` !== `${account.role}-${account.id}`) return row;
+        if (getAccountKey(row) !== getAccountKey(account)) return row;
         const currentStatus = row.status === "Tạm khóa" ? "Tạm khóa" : "Hoạt động";
         return { ...row, status: currentStatus === "Hoạt động" ? "Tạm khóa" : "Hoạt động" };
       })
@@ -183,11 +164,11 @@ export default function AccountsManagement() {
         <div className="management-content">
           <AdminPageHeader
             title="Tài khoản"
-            description="Quản lý tài khoản đăng nhập, vai trò, trạng thái và thời điểm đăng nhập gần nhất."
+            description="Quản lý tài khoản đăng nhập, mật khẩu, vai trò và trạng thái truy cập hệ thống."
             action={(
               <div className="admin-header-actions">
-                <Button icon="add" onClick={() => setModalConfig({ mode: "add", initialValues: {} })}>Thêm tài khoản</Button>
-                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? cancelEditing : startEditing}>
+                <Button icon="add" onClick={() => openAddModal()}>Thêm tài khoản</Button>
+                <Button icon="edit" variant={isTableEditing ? "secondary" : "primary"} onClick={isTableEditing ? () => cancelEditing(normalizedRows) : () => startEditing(normalizedRows)}>
                   Chỉnh sửa
                 </Button>
               </div>
@@ -196,9 +177,11 @@ export default function AccountsManagement() {
           <AccountsTable
             accounts={displayedRows}
             isEditing={isTableEditing}
-            onCancelEdit={cancelEditing}
-            onDelete={(account) => setDraftRows((currentRows) => normalizeAccounts(currentRows.filter((row) => `${row.role}-${row.id}` !== `${account.role}-${account.id}`)))}
-            onEdit={(account) => setModalConfig({ mode: "edit", rowKey: `${account.role}-${account.id}`, initialValues: getAccountInitialValues(account) })}
+            loading={loading}
+            error={error}
+            onCancelEdit={() => cancelEditing(normalizedRows)}
+            onDelete={(account) => setDraftRows((currentRows) => normalizeAccounts(currentRows.filter((row) => getAccountKey(row) !== getAccountKey(account))))}
+            onEdit={(account) => openEditModal(getAccountKey(account), getAccountInitialValues(account))}
             onSaveAll={saveAllChanges}
             onToggleStatus={toggleAccountStatus}
           />
@@ -207,10 +190,10 @@ export default function AccountsManagement() {
       <AddRecordModal
         title={modalConfig?.mode === "edit" ? "Chỉnh sửa tài khoản" : "Thêm tài khoản"}
         description={modalConfig?.mode === "edit" ? "Cập nhật thông tin tài khoản đã chọn." : "Nhập thông tin tài khoản mới và vai trò sử dụng trong hệ thống."}
-        fields={accountFormFields}
+        fields={dynamicAccountFormFields}
         initialValues={modalConfig?.initialValues}
         isOpen={Boolean(modalConfig)}
-        onClose={() => setModalConfig(null)}
+        onClose={closeModal}
         onSubmit={handleSubmit}
         submitIcon={modalConfig?.mode === "edit" ? "save" : "add"}
         submitLabel={modalConfig?.mode === "edit" ? "Lưu" : "Thêm"}

@@ -1,7 +1,15 @@
 import { adminNavItems } from "../../data/navigation.js";
+import { clearDemoSessionId, requestJson } from "../../services/apiClient.js";
 import Icon from "../common/Icon.jsx";
 
 export default function AdminSidebar({ activeLabel = "Sinh viên" }) {
+  async function handleLogout(event) {
+    event.preventDefault();
+    await requestJson("/auth/logout", { method: "POST" }).catch(() => null);
+    clearDemoSessionId();
+    window.location.href = "/";
+  }
+
   return (
     <aside className="admin-sidebar">
       <div className="sidebar-brand">
@@ -15,7 +23,7 @@ export default function AdminSidebar({ activeLabel = "Sinh viên" }) {
           </a>
         ))}
       </nav>
-      <a className="sidebar-profile" href="/">
+      <a className="sidebar-profile" href="/" onClick={handleLogout}>
         <Icon name="logout" />
         <strong>Đăng xuất</strong>
       </a>

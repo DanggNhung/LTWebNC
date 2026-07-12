@@ -11,4 +11,15 @@ const pool = mysql.createPool({
   namedPlaceholders: true
 });
 
+pool.testConnection = async function testConnection() {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.query("SELECT 1 AS ok");
+    return true;
+  } finally {
+    connection.release();
+  }
+};
+
 module.exports = pool;

@@ -1,4 +1,8 @@
-import { departments, majorsByDepartment } from "./academicStructure.js";
+/**
+ * Định nghĩa cấu trúc form fields cho từng entity.
+ * Các trường có type "select" với options/optionMap sẽ được inject dynamic
+ * ở tầng Page (từ API) trước khi truyền vào AddRecordModal.
+ */
 
 export const studentFormFields = [
   { name: "lastName", label: "Họ", placeholder: "Nhập họ" },
@@ -21,41 +25,39 @@ export const classFormFields = [
     name: "department",
     label: "Khoa",
     type: "select",
-    options: departments
+    options: [] // Được inject dynamic từ useFacultyOptions
   },
   {
     name: "major",
     label: "Ngành",
     type: "select",
     dependsOn: "department",
-    optionMap: majorsByDepartment
-  },
-  { name: "advisor", label: "Giảng viên phụ trách", placeholder: "Nhập tên giảng viên" },
-  { name: "size", label: "Sĩ số", type: "number", placeholder: "Nhập sĩ số" }
+    optionMap: {} // Được inject dynamic từ useFacultyOptions
+  }
 ];
 
 export const subjectFormFields = [
   { name: "subjectCode", label: "Mã môn", placeholder: "Ví dụ: CS-101" },
   { name: "subjectName", label: "Tên môn học", placeholder: "Nhập tên môn học" },
-  { name: "credits", label: "Số tín chỉ", type: "number", placeholder: "Nhập số tín chỉ" },
+  { name: "credits", label: "Số tín chỉ", type: "number", placeholder: "Từ 1 đến 3", min: 1, max: 3 },
   {
     name: "department",
     label: "Khoa",
     type: "select",
-    options: departments
+    options: [] // Được inject dynamic từ useFacultyOptions
   },
   {
     name: "instructor",
     label: "Giảng viên hướng dẫn",
     type: "select",
     dependsOn: "department",
-    optionMap: {}
+    optionMap: {} // Được inject dynamic từ accounts API
   },
   {
     name: "knowledgeBlock",
     label: "Khối kiến thức",
     type: "select",
-    options: ["Giáo dục đại cương", "Chuyên ngành", "Bổ trợ", "Cơ sở ngành"]
+    options: ["Giáo dục đại cương", "Cơ sở ngành", "Chuyên ngành", "Bổ trợ"]
   }
 ];
 
@@ -63,18 +65,18 @@ export const accountFormFields = [
   { name: "lastName", label: "Họ", placeholder: "Nhập họ" },
   { name: "firstName", label: "Tên", placeholder: "Nhập tên" },
   { name: "accountId", label: "ID", placeholder: "Nhập ID tài khoản" },
-  { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu" },
+  { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 6 ký tự" },
   {
     name: "role",
     label: "Vai trò",
     type: "select",
-    options: ["Sinh viên", "Giảng viên", "Quản trị viên"]
+    options: ["Sinh viên", "Giảng viên"]
   },
   {
     name: "department",
     label: "Khoa",
     type: "select",
-    options: departments,
+    options: [], // Được inject dynamic từ useFacultyOptions
     showWhen: { field: "role", value: "Giảng viên" }
   }
 ];
